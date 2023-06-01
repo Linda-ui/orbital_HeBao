@@ -1,4 +1,4 @@
-package main
+package kitex_handler
 
 import (
 	sum "Orbital_Hebao/kitex_servers/kitex_gen/sum"

@@ -15,11 +15,12 @@ import (
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
-	"github.com/cloudwego/kitex/pkg/transmeta"
-	"github.com/cloudwego/kitex/transport"
+	"github.com/kitex-contrib/registry-nacos/resolver"
 )
 
 func customizedRegister(r *server.Hertz) {
+	r.GET("/ping", handler.Ping)
+
 	r.GET("/", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(http.StatusOK, "the api gateway is running")
 	})
@@ -35,17 +36,18 @@ func registerGateway(r *server.Hertz) {
 		handler.SvcMap = make(map[string]genericclient.Client)
 	}
 
-	idlPath := "../idl/"
+	idlPath := "./idl/"
 	c, err := os.ReadDir(idlPath)
 	if err != nil {
 		hlog.Fatalf("new thrift file provider failed: %v", err)
 	}
 
-	for _, entry := range c {
+	nacosResolver, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		hlog.Fatalf("err:%v", err)
+	}
 
-		if entry.IsDir() || entry.Name() == "sum.thrift" {
-			continue
-		}
+	for _, entry := range c {
 
 		svcName := strings.ReplaceAll(entry.Name(), ".thrift", "")
 
@@ -63,8 +65,7 @@ func registerGateway(r *server.Hertz) {
 		cli, err := genericclient.NewClient(
 			svcName,
 			g,
-			client.WithTransportProtocol(transport.TTHeader),
-			client.WithMetaHandler(transmeta.ClientTTHeaderHandler),
+			client.WithResolver(nacosResolver),
 		)
 		if err != nil {
 			hlog.Fatal(err)
@@ -72,5 +73,6 @@ func registerGateway(r *server.Hertz) {
 
 		handler.SvcMap[svcName] = cli
 	}
+
 	group.POST("/:svc", handler.Gateway)
 }

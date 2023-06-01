@@ -1,4 +1,4 @@
-package main
+package kitex_handler
 
 import (
 	echo "Orbital_Hebao/kitex_servers/kitex_gen/echo"

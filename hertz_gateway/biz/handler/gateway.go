@@ -14,8 +14,8 @@ import (
 )
 
 type requiredParams struct {
-	Method    string `json:"method"`
-	BizParams string `json:"biz_params"`
+	Method    string `json:"method,required"`
+	BizParams string `json:"biz_params,required"`
 }
 
 var SvcMap = make(map[string]genericclient.Client)
@@ -39,7 +39,11 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("/%s/%s", svcName, params.Method), bytes.NewBuffer([]byte(params.BizParams)))
+	req, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/%s/%s", svcName, params.Method),
+		bytes.NewBuffer([]byte(params.BizParams)),
+	)
 	if err != nil {
 		hlog.Warnf("new http request failed: %v", err)
 		c.JSON(http.StatusOK, error{msg: "request server fail"})
@@ -73,6 +77,7 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		c.JSON(http.StatusOK, error{msg: "server handle fail"})
 		return
 	}
+
 	realResp.Body["err_code"] = 0
 	realResp.Body["err_message"] = "ok"
 	c.JSON(http.StatusOK, realResp.Body)
