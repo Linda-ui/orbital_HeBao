@@ -3,22 +3,74 @@
 package main
 
 import (
+	"Orbital_Hebao/hertz_gateway/biz/handler"
 	"context"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/client/genericclient"
+	"github.com/cloudwego/kitex/pkg/generic"
+	"github.com/cloudwego/kitex/pkg/transmeta"
+	"github.com/cloudwego/kitex/transport"
 )
 
-// customizeRegister registers customize routers.
 func customizedRegister(r *server.Hertz) {
 	r.GET("/", func(ctx context.Context, c *app.RequestContext) {
-		c.String(consts.StatusOK, "the api gateway is running")
+		c.JSON(http.StatusOK, "the api gateway is running")
 	})
 
-	gatewayRegister(r)
+	registerGateway(r)
 }
 
-func gatewayRegister(r *server.Hertz) {
+// registerGateway registers the router of gateway
+func registerGateway(r *server.Hertz) {
+	group := r.Group("/gateway")
 
+	if handler.SvcMap == nil {
+		handler.SvcMap = make(map[string]genericclient.Client)
+	}
+
+	idlPath := "../idl/"
+	c, err := os.ReadDir(idlPath)
+	if err != nil {
+		hlog.Fatalf("new thrift file provider failed: %v", err)
+	}
+
+	for _, entry := range c {
+
+		if entry.IsDir() || entry.Name() == "sum.thrift" {
+			continue
+		}
+
+		svcName := strings.ReplaceAll(entry.Name(), ".thrift", "")
+
+		provider, err := generic.NewThriftFileProvider(entry.Name(), idlPath)
+		if err != nil {
+			hlog.Fatalf("new thrift file provider failed: %v", err)
+			break
+		}
+
+		g, err := generic.HTTPThriftGeneric(provider)
+		if err != nil {
+			hlog.Fatal(err)
+		}
+
+		cli, err := genericclient.NewClient(
+			svcName,
+			g,
+			client.WithTransportProtocol(transport.TTHeader),
+			client.WithMetaHandler(transmeta.ClientTTHeaderHandler),
+		)
+		if err != nil {
+			hlog.Fatal(err)
+		}
+
+		handler.SvcMap[svcName] = cli
+	}
+	group.POST("/:svc", handler.Gateway)
 }
