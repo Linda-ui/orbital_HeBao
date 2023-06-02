@@ -27,7 +27,7 @@ Various extensions are integrated into the API gateway to handle extra logic bes
 <br></br>
 
 ## System Design
-![system design](https://github.com/Linda-ui/orbital_HeBao/assets/83194176/9236f888-f401-4567-a58d-53cb6219ca62)
+![system design](./docs/System%20Design%20Diagram.jpg)
 The API gateway is implemented as a Hertz server containing multiple Kitex clients, each corresponding to a microservice (implemented as a Kitex server). The Hertz
 server receives incoming HTTP requests from the client and invokes the respective Kitex client. Then, the Kitex client will translate the HTTP request to Thrift binary request and initiate a generic RPC call to its backend server. The backend Kitex server handles the request and sends a response back to the Kitex client, which is then translated back to HTTP response and directed back to the client. 
 <br></br>
@@ -68,6 +68,50 @@ This is implemented using Kitex’s default rate limiter, which specifies the ma
 6. The request is forwarded to the selected instance of the microservice for process and a response will be sent back to the generic client.
 7. The generic response is translated back into HTTP response and relayed back to the client. 
 <br></br>
+
+## Milstone 1 Technical Proof
+For Milestone 1, we have implemented the API gateway plus two simple backend Kitex servers for testing. We also incorporated Nacos as a service registry centre for more efficient discovery of our backend services. Load balancing and rate limiting features are not implemented yet.
+
+### Initialisation
+
+First download nacos and start the nacos server locally. 
+
+Then, run the API gateway in shell.
+```shell
+# root directory
+go run ./hertz_gateway 
+```
+
+Then, run the two Kitex test servers.
+```shell
+# kitex_servers/server
+go run ./echo
+go run ./sum
+```
+### Testing
+
+test if the api gateway is running
+```shell
+curl http://localhost:8080/
+
+# "the api gateway is running"% 
+```
+
+test the `echo` service
+```shell
+curl -X POST http://localhost:8080/gateway/echo -H "Content-Type: application/json" -d '{"method":"echomethod","biz_params":"{\"msg\":\"hello\"}"}'
+```
+```shell
+{"err_code":0,"err_message":"ok","msg":"hello"}
+```
+
+test the `sum` service
+```shell
+curl -X POST http://localhost:8080/gateway/sum -H "Content-Type: application/json" -d '{"method":"summethod","biz_params":"{\"firstNum\":2,\"secondNum\":4}"}'
+```
+```shell
+{"err_code":0,"err_message":"ok","sum":6}
+```
 
 ## Future Development
 We propose the following improvements to be made in the future:
