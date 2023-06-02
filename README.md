@@ -74,7 +74,9 @@ For Milestone 1, we have implemented the API gateway plus two simple backend Kit
 
 ### Initialisation
 
-First download nacos and start the nacos server locally. 
+First download Nacos and start the Nacos server locally. The link for download is https://github.com/alibaba/nacos/releases and the latest version is used for testing. 
+
+To check if the Nacos server is running, log in at http://127.0.0.1:8848/nacos/index.html#/login with username `nacos` and passwor `nacos`.
 
 Then, run the API gateway in shell.
 ```shell
@@ -90,7 +92,7 @@ go run ./sum
 ```
 ### Testing
 
-test if the api gateway is running
+test if the API gateway is running
 ```shell
 curl http://localhost:8080/
 
