@@ -3,7 +3,7 @@
 package main
 
 import (
-	router "Orbital_Hebao/hertz_gateway/biz/router"
+	router "github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/router"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 

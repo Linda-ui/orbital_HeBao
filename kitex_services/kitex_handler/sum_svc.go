@@ -1,8 +1,9 @@
 package kitex_handler
 
 import (
-	sum "Orbital_Hebao/kitex_servers/kitex_gen/sum"
 	"context"
+
+	sum "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/sum"
 )
 
 type SumImpl struct{}

@@ -1,10 +1,11 @@
 package main
 
 import (
-	echosvc "Orbital_Hebao/kitex_servers/kitex_gen/echo/echosvc"
-	handler "Orbital_Hebao/kitex_servers/kitex_handler"
 	"log"
 	"net"
+
+	echosvc "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/echo/echosvc"
+	handler "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_handler"
 
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"

@@ -3,7 +3,7 @@
 package echosvc
 
 import (
-	echo "Orbital_Hebao/kitex_servers/kitex_gen/echo"
+	echo "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/echo"
 	server "github.com/cloudwego/kitex/server"
 )
 

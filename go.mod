@@ -1,4 +1,4 @@
-module Orbital_Hebao
+module github.com/Linda-ui/orbital_HeBao
 
 go 1.20
 

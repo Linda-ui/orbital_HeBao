@@ -3,7 +3,7 @@
 package sumsvc
 
 import (
-	sum "Orbital_Hebao/kitex_servers/kitex_gen/sum"
+	sum "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/sum"
 	"context"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
