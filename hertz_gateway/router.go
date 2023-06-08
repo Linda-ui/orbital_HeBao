@@ -5,8 +5,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"os"
-	"strings"
 
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/handler"
 
@@ -14,8 +12,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/client/genericclient"
-	"github.com/cloudwego/kitex/pkg/generic"
 	"github.com/kitex-contrib/registry-nacos/resolver"
 )
 
@@ -33,47 +29,17 @@ func customizedRegister(r *server.Hertz) {
 func registerGateway(r *server.Hertz) {
 	group := r.Group("/gateway")
 
-	if handler.SvcMap == nil {
-		handler.SvcMap = make(map[string]genericclient.Client)
-	}
-
 	idlPath := "./idl/"
-	c, err := os.ReadDir(idlPath)
-	if err != nil {
-		hlog.Fatalf("new thrift file provider failed: %v", err)
-	}
 
 	nacosResolver, err := resolver.NewDefaultNacosResolver()
 	if err != nil {
 		hlog.Fatalf("err:%v", err)
 	}
 
-	for _, entry := range c {
+	handler.SvcMap.AddAll(
+		idlPath,
+		client.WithResolver(nacosResolver),
+	)
 
-		svcName := strings.ReplaceAll(entry.Name(), ".thrift", "")
-
-		provider, err := generic.NewThriftFileProvider(entry.Name(), idlPath)
-		if err != nil {
-			hlog.Fatalf("new thrift file provider failed: %v", err)
-			break
-		}
-
-		g, err := generic.HTTPThriftGeneric(provider)
-		if err != nil {
-			hlog.Fatal(err)
-		}
-
-		cli, err := genericclient.NewClient(
-			svcName,
-			g,
-			client.WithResolver(nacosResolver),
-		)
-		if err != nil {
-			hlog.Fatal(err)
-		}
-
-		handler.SvcMap[svcName] = cli
-	}
-
-	group.POST("/:svc", handler.Gateway)
+	group.POST("/:svc/:method", handler.Gateway)
 }
