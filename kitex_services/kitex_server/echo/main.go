@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"sync"
 
 	echosvc "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/echo/echosvc"
 	handler "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_handler"
@@ -14,20 +15,39 @@ import (
 )
 
 func main() {
-	r1, err := registry.NewDefaultNacosRegistry()
+	r, err := registry.NewDefaultNacosRegistry()
 	if err != nil {
 		klog.Fatal(err)
 	}
 
-	svr1 := echosvc.NewServer(
-		new(handler.EchoImpl),
-		server.WithRegistry(r1),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "echo"}),
-		server.WithServiceAddr(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8888}),
-	)
+	ports := []int{8870, 8871, 8872}
 
-	err1 := svr1.Run()
-	if err1 != nil {
-		log.Println(err1.Error())
+	var wg sync.WaitGroup
+
+	for _, port := range ports {
+		wg.Add(1)
+
+		go func(p int) {
+			addr := &net.TCPAddr{
+				IP:   net.IPv4(127, 0, 0, 1),
+				Port: p,
+			}
+
+			svr := echosvc.NewServer(
+				new(handler.EchoImpl),
+				server.WithRegistry(r),
+				server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "echo"}),
+				server.WithServiceAddr(addr),
+			)
+
+			err := svr.Run()
+			if err != nil {
+				log.Println(err)
+			}
+		}(port)
 	}
+	wg.Wait()
+
+	select {}
+
 }

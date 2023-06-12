@@ -12,6 +12,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/loadbalance"
+	"github.com/cloudwego/kitex/pkg/loadbalance/lbcache"
 	"github.com/kitex-contrib/registry-nacos/resolver"
 )
 
@@ -36,9 +38,12 @@ func registerGateway(r *server.Hertz) {
 		hlog.Fatalf("err:%v", err)
 	}
 
+	lb := loadbalance.NewWeightedBalancer()
+
 	handler.SvcMap.AddAll(
 		idlPath,
 		client.WithResolver(nacosResolver),
+		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
 	)
 
 	group.POST("/:svc/:method", handler.Gateway)

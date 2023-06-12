@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"sync"
 
 	"github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_gen/sum/sumsvc"
 	handler "github.com/Linda-ui/orbital_HeBao/kitex_services/kitex_handler"
@@ -14,20 +15,38 @@ import (
 )
 
 func main() {
-	r2, err := registry.NewDefaultNacosRegistry()
+	r, err := registry.NewDefaultNacosRegistry()
 	if err != nil {
 		klog.Fatal(err)
 	}
 
-	svr2 := sumsvc.NewServer(
-		new(handler.SumImpl),
-		server.WithRegistry(r2),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "sum"}),
-		server.WithServiceAddr(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8890}),
-	)
+	ports := []int{8880, 8881, 8882}
 
-	err2 := svr2.Run()
-	if err2 != nil {
-		log.Println(err2.Error())
+	var wg sync.WaitGroup
+
+	for _, port := range ports {
+		wg.Add(1)
+
+		go func(p int) {
+			addr := &net.TCPAddr{
+				IP:   net.IPv4(127, 0, 0, 1),
+				Port: p,
+			}
+
+			svr := sumsvc.NewServer(
+				new(handler.SumImpl),
+				server.WithRegistry(r),
+				server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "sum"}),
+				server.WithServiceAddr(addr),
+			)
+
+			err := svr.Run()
+			if err != nil {
+				log.Println(err)
+			}
+		}(port)
 	}
+	wg.Wait()
+
+	select {}
 }
