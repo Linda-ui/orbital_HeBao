@@ -45,7 +45,7 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 		log.Fatalf("creating new thrift file provider failed: %v", err)
 	}
 
-	g, err := generic.HTTPThriftGeneric(p)
+	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
 		log.Fatalf("creating new generic instance failed: %v", err)
 	}
