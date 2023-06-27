@@ -61,11 +61,6 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		c.JSON(http.StatusOK, errors.New(errors.Err_ServerHandleFail))
 		return
 	}
-	jsonResp := make(map[string]string)
-	error := json.Unmarshal(realResp, &jsonResp)
-	if error != nil {
-		c.JSON(http.StatusOK, errors.New(errors.Err_ResponseUnableParse))
-	}
 
 	// Unmarshalling the response to append extra data.
 	jsonMap := make(map[string]interface{})
