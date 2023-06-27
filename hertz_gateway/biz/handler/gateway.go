@@ -1,16 +1,14 @@
 package handler
 
 import (
-	"bytes"
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/errors"
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/idl_mapping"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/kitex/pkg/generic"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
 
@@ -37,25 +35,11 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	req, err := http.NewRequest(
-		http.MethodPost,
-		fmt.Sprintf("/%s/%s", svcName, methodName),
-		bytes.NewBuffer([]byte(params.BizParams)),
-	)
-	if err != nil {
-		hlog.Errorf("new http request failed: %v", err)
-		c.JSON(http.StatusOK, errors.New(errors.Err_RequestServerFail))
-		return
-	}
+	req := params.BizParams
+	// req is of type string. It is a valid type to be passed in to the GenericCall method.
+	resp, err := cli.GenericCall(ctx, methodName, req)
 
-	customReq, err := generic.FromHTTPRequest(req)
-	if err != nil {
-		hlog.Errorf("convert request failed: %v", err)
-		c.JSON(http.StatusOK, errors.New(errors.Err_BadRequest))
-		return
-	}
-
-	resp, err := cli.GenericCall(ctx, "", customReq)
+	// respMap is for when resp is unavailable.
 	respMap := make(map[string]interface{})
 	if err != nil {
 		hlog.Errorf("generic call err: %v", err)
@@ -70,13 +54,20 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	realResp, ok := resp.(*generic.HTTPResponse)
+	realResp, ok := resp.(string)
 	if !ok {
 		c.JSON(http.StatusOK, errors.New(errors.Err_ServerHandleFail))
 		return
 	}
 
-	realResp.Body["err_code"] = 0
-	realResp.Body["err_message"] = "success"
-	c.JSON(http.StatusOK, realResp.Body)
+	// Unmarshalling the response to append extra data.
+	jsonMap := make(map[string]interface{})
+	err = json.Unmarshal([]byte(realResp), &jsonMap)
+	if err != nil {
+		c.JSON(http.StatusOK, errors.New(errors.Err_ResponseUnableParse))
+	}
+	jsonMap["err_code"] = 0
+	jsonMap["err_message"] = "success"
+
+	c.JSON(http.StatusOK, jsonMap)
 }

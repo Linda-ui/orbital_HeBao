@@ -45,6 +45,7 @@ func TestEchoImpl_EchoMethod(t *testing.T) {
 			wantErr:  false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &EchoImpl{}

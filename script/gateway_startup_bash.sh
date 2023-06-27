@@ -12,4 +12,4 @@ bash ~/nacos/bin/startup.sh -m standalone
 go run ./hertz_gateway 
 
 # shut down the nacos server when the gateway shuts down
-# bash ~/nacos/bin/shutdown.sh
+bash ~/nacos/bin/shutdown.sh
