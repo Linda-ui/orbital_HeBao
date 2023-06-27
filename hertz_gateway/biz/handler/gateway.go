@@ -45,6 +45,8 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		hlog.Errorf("generic call err: %v", err)
 		bizErr, ok := kerrors.FromBizStatusError(err)
 		if !ok {
+			// at here
+
 			c.JSON(http.StatusOK, errors.New(errors.Err_ServerMethodNotFound))
 			return
 		}
@@ -58,6 +60,11 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 	if !ok {
 		c.JSON(http.StatusOK, errors.New(errors.Err_ServerHandleFail))
 		return
+	}
+	jsonResp := make(map[string]string)
+	error := json.Unmarshal(realResp, &jsonResp)
+	if error != nil {
+		c.JSON(http.StatusOK, errors.New(errors.Err_ResponseUnableParse))
 	}
 
 	// Unmarshalling the response to append extra data.
