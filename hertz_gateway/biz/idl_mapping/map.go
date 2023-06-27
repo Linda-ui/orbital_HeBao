@@ -36,18 +36,21 @@ func (m *DynamicMap) AddAll(idlPath string, opts ...client.Option) {
 	}
 }
 
-func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) {
+// idlPath does not include the file name
+func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
 	// creating a new generic client
 	p, err := generic.NewThriftFileProvider(idlFileName, idlPath)
 	if err != nil {
-		log.Fatalf("creating new thrift file provider failed: %v", err)
+		log.Printf("creating new thrift file provider failed: %v", err)
+		return err
 	}
 
 	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
-		log.Fatalf("creating new generic instance failed: %v", err)
+		log.Printf("creating new generic instance failed: %v", err)
+		return err
 	}
 
 	cli, err := genericclient.NewClient(
@@ -56,7 +59,8 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 		opts...,
 	)
 	if err != nil {
-		log.Fatalf("creating new generic client failed: %v", err)
+		log.Printf("creating new generic client failed: %v", err)
+		return err
 	}
 
 	// adding the generic client to the map
@@ -64,4 +68,5 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 		m.innerMap = make(map[string]genericclient.Client)
 	}
 	m.innerMap[svcName] = cli
+	return nil
 }

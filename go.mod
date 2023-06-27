@@ -11,6 +11,8 @@ require (
 	github.com/kitex-contrib/registry-nacos v0.1.0
 )
 
+require github.com/stretchr/objx v0.5.0 // indirect
+
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
