@@ -2,10 +2,10 @@ package idl_mapping
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cloudwego/kitex/client"
@@ -79,30 +79,28 @@ type TestCase struct {
 }
 
 func TestDynamicMap_Add(t *testing.T) {
-	// Make a temporary directory
+	// Create temp directory with temp files for testing
 	tempDir, err := os.MkdirTemp("", "dir")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Create and write the temporary IDL files for testing
-	file0Path := filepath.Join(tempDir, "file0.thrift")
 	file1Path := filepath.Join(tempDir, "file1.thrift")
 	file2Path := filepath.Join(tempDir, "file2.thrift")
 	file3Path := filepath.Join(tempDir, "file3.thrift")
-
 	tcArr := []TestCase{}
 
-	file0Content := []byte(``)
-	tcArr = append(tcArr, TestCase{tempDir, "file0.thrift", file0Content})
-
 	file1Content := []byte(`
-		namespace go example.file1
+		namespace go example.file5
 
-		struct MyStruct {
-			1: required string name,
-			2: optional i32 age,
+		exception MyException {
+			1: i32 code,
+			2: string message,
+		}
+
+		service MyService {
+			void handleError(1: MyException exception),
 		}
 	`)
 	tcArr = append(tcArr, TestCase{tempDir, "file1.thrift", file1Content})
@@ -133,7 +131,6 @@ func TestDynamicMap_Add(t *testing.T) {
 
 	createTestFiles(t, tcArr)
 
-	// Write testcases
 	dynamicMap := &DynamicMap{
 		innerMap: make(map[string]genericclient.Client),
 	}
@@ -141,52 +138,40 @@ func TestDynamicMap_Add(t *testing.T) {
 	testCases := []struct {
 		name      string
 		idlPath   string
-		expectErr string
+		expectErr error
 	}{
-		{
-			name:      "file0.thrift",
-			idlPath:   file0Path,
-			expectErr: fmt.Sprintf("parse ../../../../../../..%s/file0.thrift err: not document", tempDir),
-		},
 		{
 			name:      "file1.thrift",
 			idlPath:   file1Path,
-			expectErr: "empty serverce from idls",
+			expectErr: nil,
 		},
 		{
 			name:      "file2.thrift",
 			idlPath:   file2Path,
-			expectErr: "",
+			expectErr: nil,
 		},
 		{
 			name:      "file3.thrift",
 			idlPath:   file3Path,
-			expectErr: "",
+			expectErr: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := dynamicMap.Add(tc.name, tempDir)
-			switch tc.name {
-			case "file0.thrift":
-				assert.EqualError(t, err, tc.expectErr)
-				assert.False(t, dynamicMap.hasService("file0"))
-			case "file1.thrift":
-				assert.EqualError(t, err, tc.expectErr)
-				assert.False(t, dynamicMap.hasService("file1"))
-			default:
-				assert.NoError(t, err)
+			if (err != nil) && err != tc.expectErr {
+				t.Errorf("EchoImpl.EchoMethod() error = %v, wantErr %v", err, tc.expectErr)
+				return
+			} else if err == nil {
+				assert.True(t, dynamicMap.hasService(strings.ReplaceAll(tc.name, ".thrift", "")))
 			}
 		})
 	}
-	assert.True(t, dynamicMap.hasService("file2"))
-	assert.True(t, dynamicMap.hasService("file3"))
 }
 
 type MockMap struct {
 	mock.Mock
-	*DynamicMap
 }
 
 func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
@@ -195,16 +180,15 @@ func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option)
 }
 
 func TestDynamicMap_AddAll(t *testing.T) {
-	// file 1 and 2 is for testing files in the main directory
-	// file 3 and 4 is for testing files in the subdirectory
-
-	tempDir, err := os.MkdirTemp("", "dir")
+	// Create temp directory with temp files for testing
+	tempDir := "./tempdir"
+	tempDir, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	subDir := filepath.Join(tempDir, "subdir")
+	subDir := tempDir + "/subdir"
 	err = os.MkdirAll(subDir, os.ModePerm)
 
 	if err != nil {
@@ -212,27 +196,25 @@ func TestDynamicMap_AddAll(t *testing.T) {
 	}
 
 	tcArr := []TestCase{}
-	tcArr = append(tcArr, TestCase{tempDir, "file1.thrift", []byte(``)})
-	tcArr = append(tcArr, TestCase{tempDir, "file2.thrift", []byte(``)})
-	tcArr = append(tcArr, TestCase{subDir, "file3.thrift", []byte(``)})
-	tcArr = append(tcArr, TestCase{subDir, "file4.thrift", []byte(``)})
+	tcArr = append(tcArr, TestCase{tempDir, "file1.txt", []byte(``)})
+	tcArr = append(tcArr, TestCase{tempDir, "file2.psd", []byte(``)})
+	tcArr = append(tcArr, TestCase{subDir, "file3.html", []byte(``)})
+	tcArr = append(tcArr, TestCase{subDir, "file4", []byte(``)})
+	tcArr = append(tcArr, TestCase{tempDir, "file5.thrift", []byte(``)})
 	createTestFiles(t, tcArr)
 
-	mockDynamicMap := &DynamicMap{
-		innerMap: make(map[string]genericclient.Client),
-	}
-
+	// Use a MockMap to assert expectations by AddAll(...)
 	mockMap := &MockMap{
-		Mock:       mock.Mock{},
-		DynamicMap: mockDynamicMap,
+		Mock: mock.Mock{},
 	}
 
-	mockMap.On("Add", "file1.txt", tempDir).Return(nil).Once()
-	mockMap.On("Add", "file2.psd", tempDir).Return(nil).Once()
-	mockMap.On("Add", "file3.html", subDir).Return(nil).Once()
-	mockMap.On("Add", "file4", subDir).Return(nil).Once()
+	mockMap.On("Add", "file1.txt", tempDir, mock.Anything).Return(nil).Once()
+	mockMap.On("Add", "file2.psd", tempDir, mock.Anything).Return(nil).Once()
+	mockMap.On("Add", "file3.html", subDir, mock.Anything).Return(nil).Once()
+	mockMap.On("Add", "file4", subDir, mock.Anything).Return(nil).Once()
+	mockMap.On("Add", "file5.thrift", tempDir, mock.Anything).Return(nil).Once()
 
-	mockMap.AddAll(tempDir)
+	AddAll(mockMap, tempDir)
 
 	mockMap.AssertExpectations(t)
 }

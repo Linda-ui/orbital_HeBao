@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/handler"
+	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/idl_mapping"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -40,7 +41,8 @@ func registerGateway(r *server.Hertz) {
 
 	lb := loadbalance.NewWeightedBalancer()
 
-	handler.SvcMap.AddAll(
+	idl_mapping.AddAll(
+		handler.SvcMap,
 		idlPath,
 		client.WithResolver(nacosResolver),
 		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),

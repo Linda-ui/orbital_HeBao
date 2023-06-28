@@ -10,6 +10,10 @@ import (
 	"github.com/cloudwego/kitex/pkg/generic"
 )
 
+type IMap interface {
+	Add(idlFileName string, idlPath string, opts ...client.Option) error
+}
+
 type DynamicMap struct {
 	// define a map from the service name (given by the IDL file)
 	// to the corresponding kitex generic client
@@ -21,7 +25,7 @@ func (m *DynamicMap) GetClient(svcName string) (cli genericclient.Client, ok boo
 	return cli, ok
 }
 
-func (m *DynamicMap) AddAll(idlPath string, opts ...client.Option) {
+func AddAll(m IMap, idlPath string, opts ...client.Option) {
 	c, err := os.ReadDir(idlPath)
 	if err != nil {
 		log.Fatalf("scanning idl file directory failed: %v", err)
@@ -29,14 +33,13 @@ func (m *DynamicMap) AddAll(idlPath string, opts ...client.Option) {
 
 	for _, entry := range c {
 		if entry.IsDir() {
-			m.AddAll(idlPath+entry.Name()+"/", opts...)
+			AddAll(m, idlPath+"/"+entry.Name(), opts...)
 		} else {
 			m.Add(entry.Name(), idlPath, opts...)
 		}
 	}
 }
 
-// idlPath does not include the file name
 func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 

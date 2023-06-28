@@ -16,7 +16,7 @@ type requiredParams struct {
 	BizParams string `json:"biz_params"`
 }
 
-var SvcMap = idl_mapping.DynamicMap{}
+var SvcMap = &idl_mapping.DynamicMap{}
 
 func Gateway(ctx context.Context, c *app.RequestContext) {
 	svcName := c.Param("svc")
