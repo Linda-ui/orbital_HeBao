@@ -11,7 +11,7 @@ import (
 )
 
 type IMap interface {
-	Add(idlFileName string, idlPath string, opts ...client.Option) error
+	Add(idlFileName string, idlPath string, opts ...client.Option) bool
 }
 
 type DynamicMap struct {
@@ -40,20 +40,20 @@ func AddAll(m IMap, idlPath string, opts ...client.Option) {
 	}
 }
 
-func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
+func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) bool {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
 	// creating a new generic client
 	p, err := generic.NewThriftFileProvider(idlFileName, idlPath)
 	if err != nil {
 		log.Printf("creating new thrift file provider failed: %v", err)
-		return err
+		return false
 	}
 
 	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
 		log.Printf("creating new generic instance failed: %v", err)
-		return err
+		return false
 	}
 
 	cli, err := genericclient.NewClient(
@@ -63,7 +63,7 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 	)
 	if err != nil {
 		log.Printf("creating new generic client failed: %v", err)
-		return err
+		return false
 	}
 
 	// adding the generic client to the map
@@ -71,5 +71,5 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 		m.innerMap = make(map[string]genericclient.Client)
 	}
 	m.innerMap[svcName] = cli
-	return nil
+	return true
 }

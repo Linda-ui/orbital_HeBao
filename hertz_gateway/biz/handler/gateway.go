@@ -45,8 +45,6 @@ func Gateway(ctx context.Context, c *app.RequestContext) {
 		hlog.Errorf("generic call err: %v", err)
 		bizErr, ok := kerrors.FromBizStatusError(err)
 		if !ok {
-			// at here
-
 			c.JSON(http.StatusOK, errors.New(errors.Err_ServerMethodNotFound))
 			return
 		}

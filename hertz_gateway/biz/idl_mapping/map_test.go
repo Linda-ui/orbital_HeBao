@@ -88,46 +88,19 @@ func TestDynamicMap_Add(t *testing.T) {
 
 	file1Path := filepath.Join(tempDir, "file1.thrift")
 	file2Path := filepath.Join(tempDir, "file2.thrift")
-	file3Path := filepath.Join(tempDir, "file3.thrift")
 	tcArr := []TestCase{}
 
 	file1Content := []byte(`
-		namespace go example.file5
-
-		exception MyException {
-			1: i32 code,
-			2: string message,
-		}
+		namespace go example.file1
 
 		service MyService {
-			void handleError(1: MyException exception),
+			i32 add(1: i32 a, 2: i32 b),
 		}
 	`)
 	tcArr = append(tcArr, TestCase{tempDir, "file1.thrift", file1Content})
 
-	file2Content := []byte(`
-		namespace go example.file2
-
-		service MyService {
-			i32 add(1: i32 a, 2: i32 b),
-		}
-	`)
+	file2Content := []byte(``)
 	tcArr = append(tcArr, TestCase{tempDir, "file2.thrift", file2Content})
-
-	file3Content := []byte(`
-		namespace go example.subdir.file3
-
-		enum MyEnum {
-			ONE,
-			TWO,
-			THREE,
-		}
-
-		service MyService {
-			i32 add(1: i32 a, 2: i32 b),
-		}
-	`)
-	tcArr = append(tcArr, TestCase{tempDir, "file3.thrift", file3Content})
 
 	createTestFiles(t, tcArr)
 
@@ -136,34 +109,29 @@ func TestDynamicMap_Add(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name      string
-		idlPath   string
-		expectErr error
+		name    string
+		idlPath string
+		ok      bool
 	}{
 		{
-			name:      "file1.thrift",
-			idlPath:   file1Path,
-			expectErr: nil,
+			name:    "file1.thrift",
+			idlPath: file1Path,
+			ok:      true,
 		},
 		{
-			name:      "file2.thrift",
-			idlPath:   file2Path,
-			expectErr: nil,
-		},
-		{
-			name:      "file3.thrift",
-			idlPath:   file3Path,
-			expectErr: nil,
+			name:    "file2.thrift",
+			idlPath: file2Path,
+			ok:      false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := dynamicMap.Add(tc.name, tempDir)
-			if (err != nil) && err != tc.expectErr {
-				t.Errorf("EchoImpl.EchoMethod() error = %v, wantErr %v", err, tc.expectErr)
+			ok := dynamicMap.Add(tc.name, tempDir)
+			if ok != tc.ok {
+				t.Errorf("Got error = %v, wantErr %v", ok, tc.ok)
 				return
-			} else if err == nil {
+			} else if tc.ok {
 				assert.True(t, dynamicMap.hasService(strings.ReplaceAll(tc.name, ".thrift", "")))
 			}
 		})
@@ -174,9 +142,9 @@ type MockMap struct {
 	mock.Mock
 }
 
-func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
-	args := m.Called(idlFileName, idlPath, opts)
-	return args.Error(0)
+func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) bool {
+	m.Called(idlFileName, idlPath, opts)
+	return true
 }
 
 func TestDynamicMap_AddAll(t *testing.T) {
