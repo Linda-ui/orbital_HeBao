@@ -10,13 +10,14 @@ import (
 	"github.com/cloudwego/kitex/pkg/generic"
 )
 
+// an interface created for testing purposes.
 type IMap interface {
-	Add(idlFileName string, idlPath string, opts ...client.Option) bool
+	Add(idlFileName string, idlPath string, opts ...client.Option) error
 }
 
 type DynamicMap struct {
 	// define a map from the service name (given by the IDL file)
-	// to the corresponding kitex generic client
+	// to the corresponding kitex generic client.
 	innerMap map[string]genericclient.Client
 }
 
@@ -40,20 +41,20 @@ func AddAll(m IMap, idlPath string, opts ...client.Option) {
 	}
 }
 
-func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) bool {
+func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
-	// creating a new generic client
+	// creating a new generic client.
 	p, err := generic.NewThriftFileProvider(idlFileName, idlPath)
 	if err != nil {
 		log.Printf("creating new thrift file provider failed: %v", err)
-		return false
+		return err
 	}
 
 	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
 		log.Printf("creating new generic instance failed: %v", err)
-		return false
+		return err
 	}
 
 	cli, err := genericclient.NewClient(
@@ -63,13 +64,13 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 	)
 	if err != nil {
 		log.Printf("creating new generic client failed: %v", err)
-		return false
+		return err
 	}
 
-	// adding the generic client to the map
+	// adding the generic client to the map.
 	if m.innerMap == nil {
 		m.innerMap = make(map[string]genericclient.Client)
 	}
 	m.innerMap[svcName] = cli
-	return true
+	return nil
 }

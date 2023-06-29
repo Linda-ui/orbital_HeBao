@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockClient implements the genericclient.Client interface for testing
+// MockClient implements the genericclient.Client interface for testing.
 type MockClient struct{}
 
 func (c *MockClient) GenericCall(ctx context.Context, method string, request interface{}, callOptions ...callopt.Option) (response interface{}, err error) {
@@ -44,11 +44,13 @@ func TestDynamicMap_GetClient(t *testing.T) {
 	assert.Nil(t, client)
 }
 
+// a helper method for checking whether the dynamic map contains the service.
 func (m *DynamicMap) hasService(serviceName string) bool {
 	_, ok := m.innerMap[serviceName]
 	return ok
 }
 
+// a helper function for creating temporary test files.
 func createTestFiles(t *testing.T, arr []TestCase) {
 	for _, tc := range arr {
 		createTestFile(t, tc.path, tc.name, tc.content)
@@ -72,6 +74,7 @@ func createTestFile(t *testing.T, filePath string, fileName string, fileContent 
 	}
 }
 
+// a test case struct for testing the Add and AddAll methods.
 type TestCase struct {
 	path    string
 	name    string
@@ -79,7 +82,7 @@ type TestCase struct {
 }
 
 func TestDynamicMap_Add(t *testing.T) {
-	// Create temp directory with temp files for testing
+	// Create a temp directory with temp files for testing.
 	tempDir, err := os.MkdirTemp("", "dir")
 	if err != nil {
 		log.Fatal(err)
@@ -88,17 +91,20 @@ func TestDynamicMap_Add(t *testing.T) {
 
 	file1Path := filepath.Join(tempDir, "file1.thrift")
 	file2Path := filepath.Join(tempDir, "file2.thrift")
+	// create a new test table.
 	tcArr := []TestCase{}
 
+	// a valid thrift file with a service. Client is expected to be created.
 	file1Content := []byte(`
 		namespace go example.file1
 
 		service MyService {
-			i32 add(1: i32 a, 2: i32 b),
+			i64 add(1: i64 a, 2: i64 b)
 		}
 	`)
 	tcArr = append(tcArr, TestCase{tempDir, "file1.thrift", file1Content})
 
+	// an invalid thrift file without a service. Error is expected to be returned.
 	file2Content := []byte(``)
 	tcArr = append(tcArr, TestCase{tempDir, "file2.thrift", file2Content})
 
@@ -109,46 +115,50 @@ func TestDynamicMap_Add(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name    string
-		idlPath string
-		ok      bool
+		name      string
+		idlPath   string
+		wantError bool
 	}{
 		{
 			name:    "file1.thrift",
 			idlPath: file1Path,
-			ok:      true,
+			// expect no error to be returned.
+			wantError: false,
 		},
 		{
 			name:    "file2.thrift",
 			idlPath: file2Path,
-			ok:      false,
+			// expect errors to be returned.
+			wantError: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ok := dynamicMap.Add(tc.name, tempDir)
-			if ok != tc.ok {
-				t.Errorf("Got error = %v, wantErr %v", ok, tc.ok)
+			err := dynamicMap.Add(tc.name, tempDir)
+			gotError := (err != nil)
+			if tc.wantError != gotError {
+				t.Errorf("Got error = %v, wantErr %v", gotError, tc.wantError)
 				return
-			} else if tc.ok {
+			} else if !tc.wantError {
 				assert.True(t, dynamicMap.hasService(strings.ReplaceAll(tc.name, ".thrift", "")))
 			}
 		})
 	}
 }
 
+// MockMap implements the IMap interface for testing. It mocks the DynamicMap struct.
 type MockMap struct {
 	mock.Mock
 }
 
-func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) bool {
-	m.Called(idlFileName, idlPath, opts)
-	return true
+func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
+	args := m.Called(idlFileName, idlPath, opts)
+	return args.Error(0)
 }
 
 func TestDynamicMap_AddAll(t *testing.T) {
-	// Create temp directory with temp files for testing
+	// Create a temp directory with temp files for testing
 	tempDir := "./tempdir"
 	tempDir, err := os.MkdirTemp("", "temp")
 	if err != nil {
