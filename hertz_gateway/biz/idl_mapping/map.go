@@ -10,9 +10,14 @@ import (
 	"github.com/cloudwego/kitex/pkg/generic"
 )
 
+// an interface created for testing purposes.
+type IMap interface {
+	Add(idlFileName string, idlPath string, opts ...client.Option) error
+}
+
 type DynamicMap struct {
 	// define a map from the service name (given by the IDL file)
-	// to the corresponding kitex generic client
+	// to the corresponding kitex generic client.
 	innerMap map[string]genericclient.Client
 }
 
@@ -21,7 +26,7 @@ func (m *DynamicMap) GetClient(svcName string) (cli genericclient.Client, ok boo
 	return cli, ok
 }
 
-func (m *DynamicMap) AddAll(idlPath string, opts ...client.Option) {
+func AddAll(m IMap, idlPath string, opts ...client.Option) {
 	c, err := os.ReadDir(idlPath)
 	if err != nil {
 		log.Fatalf("scanning idl file directory failed: %v", err)
@@ -29,25 +34,27 @@ func (m *DynamicMap) AddAll(idlPath string, opts ...client.Option) {
 
 	for _, entry := range c {
 		if entry.IsDir() {
-			m.AddAll(idlPath+entry.Name()+"/", opts...)
+			AddAll(m, idlPath+"/"+entry.Name(), opts...)
 		} else {
 			m.Add(entry.Name(), idlPath, opts...)
 		}
 	}
 }
 
-func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) {
+func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
-	// creating a new generic client
+	// creating a new generic client.
 	p, err := generic.NewThriftFileProvider(idlFileName, idlPath)
 	if err != nil {
-		log.Fatalf("creating new thrift file provider failed: %v", err)
+		log.Printf("creating new thrift file provider failed: %v", err)
+		return err
 	}
 
 	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
-		log.Fatalf("creating new generic instance failed: %v", err)
+		log.Printf("creating new generic instance failed: %v", err)
+		return err
 	}
 
 	cli, err := genericclient.NewClient(
@@ -56,12 +63,14 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 		opts...,
 	)
 	if err != nil {
-		log.Fatalf("creating new generic client failed: %v", err)
+		log.Printf("creating new generic client failed: %v", err)
+		return err
 	}
 
-	// adding the generic client to the map
+	// adding the generic client to the map.
 	if m.innerMap == nil {
 		m.innerMap = make(map[string]genericclient.Client)
 	}
 	m.innerMap[svcName] = cli
+	return nil
 }
