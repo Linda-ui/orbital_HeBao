@@ -13,7 +13,7 @@ import (
 )
 
 type requiredParams struct {
-	BizParams string `json:"biz_params"`
+	BizParams string `json:"biz_params,required"`
 }
 
 var SvcMap = &idl_mapping.DynamicMap{}

@@ -26,21 +26,6 @@ func (m *DynamicMap) GetClient(svcName string) (cli genericclient.Client, ok boo
 	return cli, ok
 }
 
-func AddAll(m IMap, idlPath string, opts ...client.Option) {
-	c, err := os.ReadDir(idlPath)
-	if err != nil {
-		log.Fatalf("scanning idl file directory failed: %v", err)
-	}
-
-	for _, entry := range c {
-		if entry.IsDir() {
-			AddAll(m, idlPath+"/"+entry.Name(), opts...)
-		} else {
-			m.Add(entry.Name(), idlPath, opts...)
-		}
-	}
-}
-
 func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
@@ -73,4 +58,23 @@ func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Opti
 	}
 	m.innerMap[svcName] = cli
 	return nil
+}
+
+func (m *DynamicMap) Delete(svcName string) {
+	delete(m.innerMap, svcName)
+}
+
+func AddAll(m IMap, idlPath string, opts ...client.Option) {
+	c, err := os.ReadDir(idlPath)
+	if err != nil {
+		log.Fatalf("scanning idl file directory failed: %v", err)
+	}
+
+	for _, entry := range c {
+		if entry.IsDir() {
+			AddAll(m, idlPath+"/"+entry.Name(), opts...)
+		} else {
+			m.Add(entry.Name(), idlPath, opts...)
+		}
+	}
 }
