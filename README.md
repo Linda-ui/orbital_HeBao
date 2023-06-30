@@ -33,9 +33,9 @@ First [download the latest version of Nacos](https://github.com/alibaba/nacos/re
 Then, run the gateway startup script to start up the API gateway and the nacos server locally.
 ```shell
 # run at project root directory
-sh script/gateway_startup_zsh.sh # for zshell
+./script/gateway_startup_zsh.sh # for zshell
 # OR
-bash script/gateway_startup_bash.sh # for bash
+./script/gateway_startup_bash.sh # for bash
 ```
 
 To check if the API gateway is running.
@@ -50,7 +50,7 @@ To check if the Nacos server is running, log in at http://127.0.0.1:8848/nacos/i
 Finally, run the backend server startup script to start up all service instances.
 ```shell
 # run at project root directory
-sh script/server_startup.sh
+./script/server_startup.sh
 ```
 <br>
 
