@@ -48,5 +48,11 @@ func registerGateway(r *server.Hertz) {
 		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
 	)
 
+	go idl_mapping.WatchAndUpdate(
+		handler.SvcMap,
+		client.WithResolver(nacosResolver),
+		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
+	)
+
 	group.POST("/:svc/:method", handler.Gateway)
 }

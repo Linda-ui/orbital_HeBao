@@ -3,6 +3,7 @@ package idl_mapping
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cloudwego/kitex/client"
@@ -12,7 +13,8 @@ import (
 
 // an interface created for testing purposes.
 type IMap interface {
-	Add(idlFileName string, idlPath string, opts ...client.Option) error
+	Add(idlPath string, opts ...client.Option) error
+	Delete(idlFileName string)
 }
 
 type DynamicMap struct {
@@ -26,11 +28,12 @@ func (m *DynamicMap) GetClient(svcName string) (cli genericclient.Client, ok boo
 	return cli, ok
 }
 
-func (m *DynamicMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
+func (m *DynamicMap) Add(idlPath string, opts ...client.Option) error {
+	idlFileName := filepath.Base(idlPath)
 	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
 
 	// creating a new generic client.
-	p, err := generic.NewThriftFileProvider(idlFileName, idlPath)
+	p, err := generic.NewThriftFileProvider(idlPath)
 	if err != nil {
 		log.Printf("creating new thrift file provider failed: %v", err)
 		return err
@@ -74,7 +77,7 @@ func AddAll(m IMap, idlPath string, opts ...client.Option) {
 		if entry.IsDir() {
 			AddAll(m, idlPath+"/"+entry.Name(), opts...)
 		} else {
-			m.Add(entry.Name(), idlPath, opts...)
+			m.Add(idlPath+"/"+entry.Name(), opts...)
 		}
 	}
 }

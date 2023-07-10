@@ -135,7 +135,7 @@ func TestDynamicMap_Add(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := dynamicMap.Add(tc.name, tempDir)
+			err := dynamicMap.Add(tempDir)
 			gotError := (err != nil)
 			if tc.wantError != gotError {
 				t.Errorf("Got error = %v, wantErr %v", gotError, tc.wantError)
@@ -152,9 +152,14 @@ type MockMap struct {
 	mock.Mock
 }
 
-func (m *MockMap) Add(idlFileName string, idlPath string, opts ...client.Option) error {
-	args := m.Called(idlFileName, idlPath, opts)
+func (m *MockMap) Add(idlPath string, opts ...client.Option) error {
+	args := m.Called(idlPath, opts)
 	return args.Error(0)
+}
+
+func (m *MockMap) Delete(idlFileName string) {
+	m.Called(idlFileName)
+	return
 }
 
 func TestDynamicMap_AddAll(t *testing.T) {
