@@ -6,16 +6,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/handler"
-	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/idl_mapping"
-
+	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/adaptor/handler"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/pkg/loadbalance"
-	"github.com/cloudwego/kitex/pkg/loadbalance/lbcache"
-	"github.com/kitex-contrib/registry-nacos/resolver"
 )
 
 func customizedRegister(r *server.Hertz) {
@@ -24,35 +17,4 @@ func customizedRegister(r *server.Hertz) {
 	r.GET("/", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(http.StatusOK, "the api gateway is running")
 	})
-
-	registerGateway(r)
-}
-
-// registerGateway registers the router of gateway
-func registerGateway(r *server.Hertz) {
-	group := r.Group("/gateway")
-
-	idlPath := "./idl/"
-
-	nacosResolver, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		hlog.Fatalf("err:%v", err)
-	}
-
-	lb := loadbalance.NewWeightedBalancer()
-
-	idl_mapping.AddAll(
-		handler.SvcMap,
-		idlPath,
-		client.WithResolver(nacosResolver),
-		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
-	)
-
-	go idl_mapping.WatchAndUpdate(
-		handler.SvcMap,
-		client.WithResolver(nacosResolver),
-		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
-	)
-
-	group.POST("/:svc/:method", handler.Gateway)
 }

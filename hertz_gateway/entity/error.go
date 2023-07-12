@@ -1,6 +1,6 @@
-package errors
+package entity
 
-type Err int64
+type Err int
 
 const (
 	Err_BadRequest           Err = 10001
@@ -10,6 +10,10 @@ const (
 	Err_ServerHandleFail     Err = 10005
 	Err_ResponseUnableParse  Err = 10006
 )
+
+type ErrService interface {
+	JSONEncode(e Err) map[string]interface{}
+}
 
 func (e Err) String() string {
 	switch e {
