@@ -11,7 +11,11 @@ require (
 	github.com/kitex-contrib/registry-nacos v0.1.0
 )
 
-require github.com/stretchr/objx v0.5.0 // indirect
+require (
+	github.com/hertz-contrib/pprof v0.1.0 // indirect
+	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+)
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect

@@ -25,34 +25,14 @@ func TestDatabase_GetClient(t *testing.T) {
 }
 
 func TestDatabase_AddService(t *testing.T) {
-	// Create a temp directory with temp files for testing.
-	tempDir := t.TempDir()
 
-	// create test file 1.
-	// It is a valid thrift file with a service. Client is expected to be created.
-	file1 := test.TempFile{
-		Name: "file1.thrift",
-		Path: filepath.Join(tempDir, "file1.thrift"),
-		Content: []byte(`
-		namespace go example.file1
-
-		service MyService {
-			i64 add(1: i64 a, 2: i64 b)
-		}
-	`),
+	root, err := test.GetIDLRoot()
+	if err != nil {
+		t.Fatalf("failed to get IDL directory: %v", err)
 	}
 
-	// create test file 2.
-	// It is an invalid thrift file without a service. Error is expected to be returned.
-	file2 := test.TempFile{
-		Name:    "file2.thrift",
-		Path:    filepath.Join(tempDir, "file2.thrift"),
-		Content: []byte(``),
-	}
-
-	// create a list of test files.
-	files := []test.TempFile{file1, file2}
-	test.CreateTestFiles(t, files)
+	file1_path := filepath.Join(*root, "file1.thrift")
+	file2_path := filepath.Join(*root, "file2.thrift")
 
 	db := NewDatabase()
 
@@ -68,13 +48,13 @@ func TestDatabase_AddService(t *testing.T) {
 	}{
 		{
 			Name:      "valid thrift IDL file",
-			args:      args{file1.Path},
+			args:      args{file1_path},
 			svcName:   "file1",
 			wantError: false,
 		},
 		{
 			Name:      "invalid thrift IDL file",
-			args:      args{file2.Path},
+			args:      args{file2_path},
 			svcName:   "file2",
 			wantError: true,
 		},
