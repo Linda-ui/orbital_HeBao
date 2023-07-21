@@ -56,6 +56,7 @@ func (m *manager) AddAllServices(idlRootPath string, opts ...client.Option) {
 }
 
 func (m *manager) DynamicUpdate(idlRootPath string, opts ...client.Option) {
+	// define a set to store all directory paths.
 	dirPathSet := make(map[string]struct{})
 
 	watcher, err := fsnotify.NewWatcher()

@@ -10,7 +10,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/generic"
 )
 
-// type database implements the idl_map.Repository interface.
+// type database implements the idlmap.Repository interface.
 type database map[string]genericclient.Client
 
 func NewDatabase() database {
