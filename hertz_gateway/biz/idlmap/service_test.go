@@ -11,22 +11,6 @@ import (
 )
 
 func TestManager_AddAllServices(t *testing.T) {
-	// Create a temp directory with a subdirectory for testing
-	tempDir := t.TempDir()
-	subDir := tempDir + "/subdir"
-	err := os.MkdirAll(subDir, os.ModePerm)
-	if err != nil {
-		t.Fatalf("failed to create subdirectory: %v", err)
-	}
-
-	files := []test.TempFile{
-		{Name: "file1.thrift", Path: filepath.Join(tempDir, "file1.thrift"), Content: []byte(``)},
-		{Name: "file2.thrift", Path: filepath.Join(tempDir, "file2.thrift"), Content: []byte(``)},
-		{Name: "file3.thrift", Path: filepath.Join(subDir, "file3.thrift"), Content: []byte(``)},
-		{Name: "file4.thrift", Path: filepath.Join(subDir, "file4.thrift"), Content: []byte(``)},
-		{Name: "file5.thrift", Path: filepath.Join(tempDir, "file5.thrift"), Content: []byte(``)},
-	}
-	test.CreateTestFiles(t, files)
 
 	mockRepo := mymock.NewRepository()
 
@@ -35,13 +19,29 @@ func TestManager_AddAllServices(t *testing.T) {
 		repo: mockRepo,
 	}
 
-	mockRepo.On("AddService", files[0].Path, mock.Anything).Return(nil).Once()
-	mockRepo.On("AddService", files[1].Path, mock.Anything).Return(nil).Once()
-	mockRepo.On("AddService", files[2].Path, mock.Anything).Return(nil).Once()
-	mockRepo.On("AddService", files[3].Path, mock.Anything).Return(nil).Once()
-	mockRepo.On("AddService", files[4].Path, mock.Anything).Return(nil).Once()
+	root, err := test.GetIDLRoot()
+	if err != nil {
+		t.Fatalf("failed to get IDL directory: %v", err)
+	}
 
-	testManager.AddAllServices(tempDir)
+	// recursively find all files / directories
+	err = filepath.Walk(*root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			t.Fatalf("Error accessing path: %v\n", err)
+		}
+
+		if !info.Mode().IsDir() && info.Mode().IsRegular() {
+			mockRepo.On("AddService", path, mock.Anything).Return(nil).Once()
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Fatalf("Error walking through directory: %v\n", err)
+	}
+
+	testManager.AddAllServices(*root)
 
 	mockRepo.AssertExpectations(t)
 }

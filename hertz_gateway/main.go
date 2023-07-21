@@ -4,10 +4,12 @@ package main
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/hertz-contrib/pprof"
 )
 
 func main() {
 	h := server.Default(server.WithHostPorts(":8080"))
+	pprof.Register(h)
 
 	register(h)
 
