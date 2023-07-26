@@ -9,5 +9,5 @@ struct EchoResp {
 }
 
 service EchoSvc {
-  EchoResp EchoMethod(1: EchoReq req)( api.post = '/echo/echomethod', api.param = 'true' )
+  EchoResp EchoMethod(1: EchoReq req)
 }

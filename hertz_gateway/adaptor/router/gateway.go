@@ -4,6 +4,7 @@ import (
 	handler "github.com/Linda-ui/orbital_HeBao/hertz_gateway/adaptor/handler"
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/idlmap"
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/infrastructure"
+	utils "github.com/Linda-ui/orbital_HeBao/hertz_gateway/utils"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/kitex/client"
@@ -16,12 +17,12 @@ import (
 func RegisterGateway(r *server.Hertz) {
 	nacosResolver, err := resolver.NewDefaultNacosResolver()
 	if err != nil {
-		hlog.Fatalf("err:%v", err)
+		hlog.Fatalf("err: %v", err)
 	}
 
 	lb := loadbalance.NewWeightedBalancer()
 
-	idlRootPath := "./idl"
+	idlRootPath := utils.GetProjectIDLRoot()
 
 	idlServiceMap := infrastructure.NewDatabase()
 	dynamicMapManager := idlmap.NewManager(idlServiceMap)

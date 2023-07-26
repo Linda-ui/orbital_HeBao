@@ -1,0 +1,3 @@
+serviceName: echo
+host: localhost
+ports: ["8870", "8871", "8872"]
