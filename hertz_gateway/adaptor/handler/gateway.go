@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/biz/errors"
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/entity"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/kitex/pkg/kerrors"
 )
 
 type apiGateway struct {
@@ -49,17 +49,11 @@ func (gateway *apiGateway) Handler(ctx context.Context, c *app.RequestContext) {
 	// req is of type string. It is a valid type to be passed in to the GenericCall method.
 	resp, err := cli.GenericCall(ctx, methodName, req)
 
-	// respMap is for when resp is unavailable.
 	respMap := make(map[string]interface{})
 	if err != nil {
-		hlog.Errorf("generic call err: %v", err)
-		bizErr, ok := kerrors.FromBizStatusError(err)
-		if !ok {
-			c.JSON(http.StatusOK, errSender.JSONEncode(entity.Err_ServerMethodNotFound))
-			return
-		}
-		respMap["err_code"] = bizErr.BizStatusCode()
-		respMap["err_message"] = bizErr.BizMessage()
+		splitMsg := strings.SplitN(err.Error(), ": ", 2)
+		respMap["error_category"] = splitMsg[0]
+		respMap["error_details"] = splitMsg[1]
 		c.JSON(http.StatusOK, respMap)
 		return
 	}
