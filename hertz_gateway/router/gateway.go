@@ -34,7 +34,7 @@ func RegisterGateway(r *server.Hertz) {
 		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
 	)
 
-	go dynamicMapManager.DynamicUpdate(
+	dynamicMapManager.DynamicUpdate(
 		idlRootPath,
 		client.WithResolver(nacosResolver),
 		client.WithLoadBalancer(lb, &lbcache.Options{Cacheable: true}),
