@@ -11,6 +11,7 @@ require (
 	github.com/cloudwego/kitex-benchmark v0.0.0-20221214033323-beba686ebfc5
 	github.com/hertz-contrib/pprof v0.1.0
 	github.com/kitex-contrib/registry-nacos v0.1.0
+	github.com/spf13/viper v1.16.0
 )
 
 require (
@@ -25,7 +26,6 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.16.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 )
