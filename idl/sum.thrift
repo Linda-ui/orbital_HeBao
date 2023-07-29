@@ -10,5 +10,5 @@ struct SumResp {
 }
 
 service SumSvc {
-  SumResp SumMethod(1: SumReq req)( api.post = '/sum/summethod', api.param = 'true' )
+  SumResp SumMethod(1: SumReq req)
 }

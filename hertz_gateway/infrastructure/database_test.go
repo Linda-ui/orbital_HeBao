@@ -26,13 +26,13 @@ func TestDatabase_GetClient(t *testing.T) {
 
 func TestDatabase_AddService(t *testing.T) {
 
-	root, err := test.GetIDLRoot()
+	testIDLRoot, err := test.GetIDLRoot()
 	if err != nil {
 		t.Fatalf("failed to get IDL directory: %v", err)
 	}
 
-	file1_path := filepath.Join(*root, "file1.thrift")
-	file2_path := filepath.Join(*root, "file2.thrift")
+	file1_path := filepath.Join(testIDLRoot, "file1.thrift")
+	file2_path := filepath.Join(testIDLRoot, "file2.thrift")
 
 	db := NewDatabase()
 

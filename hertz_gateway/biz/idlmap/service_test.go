@@ -21,13 +21,13 @@ func TestManager_AddAllServices(t *testing.T) {
 		repo: mockRepo,
 	}
 
-	root, err := test.GetIDLRoot()
+	testIDLRoot, err := test.GetIDLRoot()
 	if err != nil {
 		t.Fatalf("failed to get IDL directory: %v", err)
 	}
 
 	// recursively find all files / directories
-	err = filepath.Walk(*root, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(testIDLRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			t.Fatalf("Error accessing path: %v\n", err)
 		}
@@ -43,7 +43,7 @@ func TestManager_AddAllServices(t *testing.T) {
 		t.Fatalf("Error walking through directory: %v\n", err)
 	}
 
-	testManager.AddAllServices(*root)
+	testManager.AddAllServices(testIDLRoot)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -61,12 +61,12 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 	}
 
 	go func() {
-		testManager.DynamicUpdate(*root)
+		testManager.DynamicUpdate(root)
 	}()
 
 	// Add a new directory and add two new files in new directory
 	// assert AddService called once for each file
-	newDirPath := filepath.Join(*root, "new_test_directory")
+	newDirPath := filepath.Join(root, "new_test_directory")
 	newFile1Path := filepath.Join(newDirPath, "new_file_1.thrift")
 	newFile2Path := filepath.Join(newDirPath, "new_file_2.thrift")
 	newFilePaths := []string{newFile1Path, newFile2Path, newFile2Path}

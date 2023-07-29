@@ -2,15 +2,14 @@ package infrastructure
 
 import (
 	"log"
-	"path/filepath"
-	"strings"
 
+	utils "github.com/Linda-ui/orbital_HeBao/hertz_gateway/utils"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
 )
 
-// type database implements the idl_map.Repository interface.
+// type database implements the idlmap.Repository interface.
 type database map[string]genericclient.Client
 
 func NewDatabase() database {
@@ -23,19 +22,19 @@ func (db database) GetClient(svcName string) (genericclient.Client, bool) {
 }
 
 func (db database) AddService(idlPath string, opts ...client.Option) error {
-	idlFileName := filepath.Base(idlPath)
-	svcName := strings.ReplaceAll(idlFileName, ".thrift", "")
+	// extracting the IDL file name without extension as the service name
+	svcName := utils.ExtractServiceName(idlPath)
 
 	// creating a new generic client.
 	p, err := generic.NewThriftFileProvider(idlPath)
 	if err != nil {
-		log.Printf("creating new thrift file provider failed: %v", err)
+		log.Printf("creating new thrift file provider for %v service failed: %v", svcName, err)
 		return err
 	}
 
 	g, err := generic.JSONThriftGeneric(p)
 	if err != nil {
-		log.Printf("creating new generic instance failed: %v", err)
+		log.Printf("creating new generic instance for %v service failed: %v", svcName, err)
 		return err
 	}
 
@@ -45,7 +44,7 @@ func (db database) AddService(idlPath string, opts ...client.Option) error {
 		opts...,
 	)
 	if err != nil {
-		log.Printf("creating new generic client failed: %v", err)
+		log.Printf("creating new generic client for %v service failed: %v", svcName, err)
 		return err
 	}
 
