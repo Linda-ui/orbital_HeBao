@@ -16,14 +16,14 @@ For the detailed documentation of this project including design, features, and d
 
 ## Overview
 
-For Milestone 2, we have implemented the API gateway plus two backend Kitex services. For each Kitex service, we created three duplicate instances (hosted on different ports) for testing purposes. 
+For Milestone 3, we have implemented the API gateway plus two backend Kitex services. For each Kitex service, we created three duplicate instances (hosted on different ports) for testing purposes. 
 
 The features we implemented includes:
 1. **Service registration and discovery:** Nacos is integrated in our gateway as the service registry. Kitex service instances register their addresses on the Nacos server, and Kitex clients can discover these instances through the Nacos server to establish connections with the corresponding servers.
 
 2. **Load balacing:** Kitex's default load balancer is integrated in our gateway so that loads (request traffics) can be evenly distributed on the three server instances created for each Kitex service. This feature is to prevent overloading and thus breakdown of any single service instance.
 
-3. **IDL-service mapping:** our gateway maintains a dynamic map between each interface definition language (IDL) file and its corresponding Kitex service. When an IDL file describing a service is added/deleted, the map will update itself to reflect changes in the managed services of our gateway.
+3. **IDL-service mapping and dynamic update:** our gateway maintains a dynamic map between each interface definition language (IDL) file and its corresponding Kitex service. When an IDL file describing a service is added/deleted, the map will update itself to reflect changes in the managed services of our gateway, even when the gateway is still running. The client would not face disruptions of the gateway service when the backend services are being added or deleted.
 <br></br>
 
 ## Initialisation
@@ -54,7 +54,7 @@ Finally, run the backend server startup script to start up all service instances
 ```
 <br>
 
-## Sending Request
+## Sending Request via shell script
 
 To use the `echo` service, run the script that sends various valid/invalid requests to the gateway as follow:
 ```shell
@@ -95,8 +95,14 @@ The output is
 Testing for business errors is omitted since it is similar to that of `echo` service.
 <br></br>
 
+## Sending request for integration test
+Navigate to the `/integration_test` directory, and run the go tests in verbose mode to see all our integration testcases:
+```shell
+go test ./... -v
+```
+
 ## Unit Test
-Unit testing for the gateway is partially done. Run the following commands to run all unit tests and check test coverage:
+Several chosen packages have unit tests done. Run the following commands to run all unit tests and check test coverage:
 ```shell
 go test ./...
 go test ./... -cover

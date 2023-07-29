@@ -28,11 +28,19 @@ func TestIntegrationGateway(t *testing.T) {
 
 		directory, filename := filepath.Split(path)
 
-		switch filepath.Base(directory) {
-		case "echo":
+		switch directory {
+		case "testdata/gateway/":
+			url = "http://localhost:8080/"
+		case "testdata/echo/":
 			url = "http://localhost:8080/gateway/echo/EchoMethod"
 		case "sum":
 			url = "http://localhost:8080/gateway/sum/SumMethod"
+		case "testdata/noService/":
+			url = "http://localhost:8080/gateway/echoXXX/EchoMethod"
+		case "testdata/noServiceMethod/":
+			url = "http://localhost:8080/gateway/echo/EchoMethodXXX"
+		default:
+			url = "http://localhost:8080/gateway"
 		}
 
 		// removing the file extension (.input) to obtain the test name
@@ -44,10 +52,19 @@ func TestIntegrationGateway(t *testing.T) {
 				t.Fatal("error reading source file:", err)
 			}
 
-			resp, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
-			if err != nil {
-				t.Fatalf("Failed to make request: %v", err)
+			var resp *http.Response
+			if directory == "testdata/gateway/" {
+				resp, err = http.Get(url)
+				if err != nil {
+					t.Fatalf("Failed to make request: %v", err)
+				}
+			} else {
+				resp, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
+				if err != nil {
+					t.Fatalf("Failed to make request: %v", err)
+				}
 			}
+
 			defer resp.Body.Close()
 
 			responseBody, err := ioutil.ReadAll(resp.Body)
