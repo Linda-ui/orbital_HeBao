@@ -10,15 +10,11 @@ import (
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/entity"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/valyala/fastjson"
 )
 
 type apiGateway struct {
 	idlMapManager entity.MapManager
-	params        requiredParams
-}
-
-type requiredParams struct {
-	BizParams string `json:"biz_params,required"`
 }
 
 func NewGateway(idlMapManager entity.MapManager) *apiGateway {
@@ -39,13 +35,21 @@ func (gateway *apiGateway) Handler(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := c.BindAndValidate(&gateway.params); err != nil {
-		hlog.Errorf("binding error: %v", err)
+	jsonBody, err := c.Body()
+	if err != nil {
+		hlog.Errorf("extracting json body error: %v", err)
 		c.JSON(http.StatusOK, errSender.JSONEncode(entity.Err_BadRequest))
 		return
 	}
 
-	req := gateway.params.BizParams
+	err = fastjson.ValidateBytes(jsonBody)
+	if err != nil {
+		hlog.Errorf("invalid json body: %v", err)
+		c.JSON(http.StatusOK, errSender.JSONEncode(entity.Err_BadRequest))
+		return
+	}
+
+	req := string(jsonBody)
 	// req is of type string. It is a valid type to be passed in to the GenericCall method.
 	resp, err := cli.GenericCall(ctx, methodName, req)
 
