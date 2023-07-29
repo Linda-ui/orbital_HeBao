@@ -1,4 +1,5 @@
 # API Gateway Configuration
+serviceName: gateway
 host: localhost
 port: 8080
 

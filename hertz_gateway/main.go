@@ -3,14 +3,30 @@
 package main
 
 import (
+	"path/filepath"
+	"runtime"
+
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/hertz-contrib/pprof"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	h := server.Default(server.WithHostPorts(":8080"))
-	pprof.Register(h)
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		klog.Fatal("failed to set cwd to hertz gateway root directory")
+	}
 
+	viper.AddConfigPath(filepath.Dir(filename))
+	viper.SetConfigName("gateway_config")
+	viper.SetConfigType("yaml")
+	viper.ReadInConfig()
+
+	h := server.Default(server.WithHostPorts(viper.GetString("host") + ":" + viper.GetString("port")))
+	h.Name = viper.GetString("serviceName")
+
+	pprof.Register(h)
 	register(h)
 
 	h.Spin()

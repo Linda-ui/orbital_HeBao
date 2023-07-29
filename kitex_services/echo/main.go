@@ -21,7 +21,6 @@ func main() {
 	if !ok {
 		klog.Fatal("failed to set cwd to echo service root directory")
 	}
-	log.Println(filename)
 
 	viper.AddConfigPath(filepath.Dir(filename))
 	viper.SetConfigName("server_config")
