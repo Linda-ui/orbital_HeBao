@@ -94,7 +94,7 @@ You can also run each unit test separately. Unit test files are those with file 
 
 ## Testing the dynamic update feature
 First, start running the gateway and example servers `echo` and `sum`.
-### Adding a service
+### Add a service
 The official documentation for creating a new Kitex service can be found [here](https://www.cloudwego.io/docs/kitex/getting-started/). You can also follow our instructions below for a simplified version of a service for testing. If you face any difficulties, please refer to the official doc for debugging.
 
 Add an example `length` Kitex service that returns the length of the string input. You can also add another service with a different service name. 
@@ -263,7 +263,7 @@ You should see:
 Now you have successfully updated the `length` service.
 <br></br>
 
-### Deleting a service
+### Delete a service
 Simply remove the `length.thrift` from the `idl/` subdirectory, and clean up the rest of the generated server code by deleting all the files.
 Perform a test to the deleted `length` service:
 ```shell
