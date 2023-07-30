@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/config"
 )
 
 func TestIntegrationGateway(t *testing.T) {
@@ -27,20 +29,21 @@ func TestIntegrationGateway(t *testing.T) {
 	for _, path := range paths {
 
 		directory, filename := filepath.Split(path)
+		gatewayAddr := "http://" + config.ServiceAddr
 
-		switch directory {
-		case "testdata/gateway/":
-			url = "http://localhost:8080/"
-		case "testdata/echo/":
-			url = "http://localhost:8080/gateway/echo/EchoMethod"
+		switch filepath.Base(directory) {
+		case "gateway":
+			url = gatewayAddr
+		case "echo":
+			url = gatewayAddr + "/gateway/echo/EchoMethod"
 		case "sum":
-			url = "http://localhost:8080/gateway/sum/SumMethod"
-		case "testdata/noService/":
-			url = "http://localhost:8080/gateway/echoXXX/EchoMethod"
-		case "testdata/noServiceMethod/":
-			url = "http://localhost:8080/gateway/echo/EchoMethodXXX"
+			url = gatewayAddr + "/gateway/sum/SumMethod"
+		case "noService":
+			url = gatewayAddr + "/gateway/echoXXX/EchoMethod"
+		case "noServiceMethod":
+			url = gatewayAddr + "/gateway/echo/EchoMethodXXX"
 		default:
-			url = "http://localhost:8080/gateway"
+			url = gatewayAddr + "/gateway"
 		}
 
 		// removing the file extension (.input) to obtain the test name
@@ -53,7 +56,7 @@ func TestIntegrationGateway(t *testing.T) {
 			}
 
 			var resp *http.Response
-			if directory == "testdata/gateway/" {
+			if filepath.Base(directory) == "gateway" {
 				resp, err = http.Get(url)
 				if err != nil {
 					t.Fatalf("Failed to make request: %v", err)
