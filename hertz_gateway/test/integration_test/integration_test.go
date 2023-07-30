@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/config"
 )
 
 func TestIntegrationGateway(t *testing.T) {
@@ -27,20 +29,21 @@ func TestIntegrationGateway(t *testing.T) {
 	for _, path := range paths {
 
 		directory, filename := filepath.Split(path)
+		gatewayAddr := "http://" + config.ServiceAddr
 
 		switch filepath.Base(directory) {
 		case "gateway":
-			url = "http://localhost:8080/"
+			url = gatewayAddr
 		case "echo":
-			url = "http://localhost:8080/gateway/echo/EchoMethod"
+			url = gatewayAddr + "/gateway/echo/EchoMethod"
 		case "sum":
-			url = "http://localhost:8080/gateway/sum/SumMethod"
+			url = gatewayAddr + "/gateway/sum/SumMethod"
 		case "noService":
-			url = "http://localhost:8080/gateway/echoXXX/EchoMethod"
+			url = gatewayAddr + "/gateway/echoXXX/EchoMethod"
 		case "noServiceMethod":
-			url = "http://localhost:8080/gateway/echo/EchoMethodXXX"
+			url = gatewayAddr + "/gateway/echo/EchoMethodXXX"
 		default:
-			url = "http://localhost:8080/gateway"
+			url = gatewayAddr + "/gateway"
 		}
 
 		// removing the file extension (.input) to obtain the test name
