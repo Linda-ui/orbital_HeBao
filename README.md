@@ -26,6 +26,8 @@ The features we implemented includes:
 3. **IDL-service mapping and dynamic update:** our gateway maintains a dynamic map between each interface definition language (IDL) file and its corresponding Kitex service. When an IDL file describing a service is added/deleted, the map will update itself to reflect changes in the managed services of our gateway, even when the gateway is still running. The client would not face disruptions of the gateway service when the backend services are being added or deleted.
 <br></br>
 
+
+
 ## Initialisation
 
 First [download the latest version of Nacos](https://github.com/alibaba/nacos/releases)
@@ -38,20 +40,34 @@ Then, run the gateway startup script to start up the API gateway and the nacos s
 ./script/gateway_startup_bash.sh # for bash
 ```
 
-To check if the API gateway is running.
+If the gateway starts succesfully, you should see something like:
+```shell
+/usr/lib/jvm/java-19-openjdk-amd64/bin/java   -Xms512m -Xmx512m -Xmn256m -Dnacos.standalone=true -Dnacos.member.list= -Xlog:gc*:file=/home/hejin/nacos/logs/nacos_gc.log:time,tags:filecount=10,filesize=100m -Dloader.path=/home/hejin/nacos/plugins,/home/hejin/nacos/plugins/health,/home/hejin/nacos/plugins/cmdb,/home/hejin/nacos/plugins/selector -Dnacos.home=/home/hejin/nacos -jar /home/hejin/nacos/target/nacos-server.jar  --spring.config.additional-location=file:/home/hejin/nacos/conf/ --logging.config=/home/hejin/nacos/conf/nacos-logback.xml --server.max-http-header-size=524288
+nacos is starting with standalone
+nacos is starting，you can check the /home/hejin/nacos/logs/start.out
+2023/07/30 17:42:18.482107 logger.go:45: [Info] logDir:</home/hejin/Study/orbital_HeBao/log>   cacheDir:</home/hejin/Study/orbital_HeBao/cache>
+2023/07/30 17:42:18.482383 logger.go:45: [Info] udp server start, port: 55009
+2023/07/30 17:42:18.483572 engine.go:617: [Debug] HERTZ: Method=POST   absolutePath=/gateway/:svc/:method     --> handlerName=github.com/Linda-ui/orbital_HeBao/hertz_gateway/adaptor/handler.(*apiGateway).Handler-fm (num=2 handlers)
+2023/07/30 17:42:18.483649 engine.go:617: [Debug] HERTZ: Method=GET    absolutePath=/                         --> handlerName=main.customizedRegister.func1 (num=2 handlers)
+2023/07/30 17:42:18.483754 engine.go:389: [Info] HERTZ: Using network library=netpoll
+2023/07/30 17:42:18.484883 transport.go:115: [Info] HERTZ: HTTP server listening on address=127.0.0.1:8080
+```
+To check if Nacos is running, check `~/nacos/logs/start.out` or the file in the above message and click the console address it provided. You should be able to see the local Nacos console.
+
+To test if the API gateway is running.
 ```shell
 curl http://localhost:8080/
 
 # should return "the api gateway is running"
 ```
 
-To check if the Nacos server is running, log in at http://127.0.0.1:8848/nacos/index.html#/login with username `nacos` and password `nacos`.
-
-Finally, run the backend server startup script to start up all service instances.
+Finally, run the backend server startup script to start all service instances.
 ```shell
 # run at project root directory
 ./script/server_startup.sh
 ```
+
+You should be able to see echo and sum services in your Nacos console, under `ServiceManagement -> Service List`.
 <br></br>
 
 ## Integration test
@@ -64,21 +80,26 @@ go test ./... -v
 
 You can also test using cURL to view the exact response the gateway sends back for each of the request, we have provided the commands to send various valid/invalid requests in `scripts/echo_request.sh` and `scripts/sum_request.sh`. You can find the expected response in the comments for each request.
 <br></br>
+
+
 ## Unit Test
 Several chosen packages have unit tests done. Run the following commands to run all unit tests and check test coverage:
 ```shell
 go test ./...
 go test ./... -cover
 ```
+You can also run each unit test separately. Unit test files are those with file name `*_test.go`.
 <br></br>
-## Testing the dynamic update feature during runtime of the gateway
+
+
+## Testing the dynamic update feature
 First, start running the gateway and example servers `echo` and `sum`.
 ### Adding a service
 The official documentation for creating a new Kitex service can be found [here](https://www.cloudwego.io/docs/kitex/getting-started/). You can also follow our instructions below for a simplified version of a service for testing. If you face any difficulties, please refer to the official doc for debugging.
 
-Add an example `length` Kitex service that returns the length of the string input. You can also use another service with a different service name. 
+Add an example `length` Kitex service that returns the length of the string input. You can also add another service with a different service name. 
 
-Under the project root directory, create a new Thrift file that defines this service and is used for Kitex to generate skeleton code.
+Under the project root directory, create a new Thrift file that defines this `length` service. This is used for Kitex to generate skeleton code.
 By convention, name it `length.thrift`.
 ```thrift
 namespace go length
@@ -144,7 +165,7 @@ func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq)
 }
 ```
 
-Next, modify the `main.go` file so that it registers the service with Nacos, has a service name called "length", and uses a customised port number 8893. Should you decide to change this port number, avoid using ports already in use by the gateway and other services, or any other programs currently running on your laptop. By default, the gateway runs on port 8080, the echo service runs on ports 8870, 8871, 8872, the sum service runs on ports 9870, 9871, 9872.
+Next, modify the `main.go` file so that it registers the service with Nacos, has a service name called "length", and uses a customised port number 8893. Avoid using ports already in use. By default, the gateway runs on port 8080, the echo service runs on ports 8870, 8871, 8872, the sum service runs on ports 9870, 9871, 9872.
 ```go
 package main
 
@@ -239,6 +260,7 @@ You should see:
 ```shell
 {"err_code":0,"err_message":"success","msg":25}
 ```
+Now you have successfully updated the `length` service.
 <br></br>
 
 ### Deleting a service
