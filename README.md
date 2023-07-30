@@ -55,51 +55,14 @@ Finally, run the backend server startup script to start up all service instances
 <br>
 
 ## Integration test
+The gateway is customised to handle business errors like invalid user requests. Depending on the user inputs, various error messages will be returned with corresponding error codes (in the form of a response).
 
-To use the `echo` service, run the script that sends various valid/invalid requests to the gateway as follow:
-```shell
-# run at project root directory
-sh script/echo_request.sh
-```
-
-The gateway is customised to handle business errors like invalid user requests. Depending on the user inputs, various error messages will be returned with corresponding error codes (in the form of a response). This is the output for running `echo_request.sh`:
-```shell
-# Normal request 1
-{"err_code":0,"err_message":"success","msg":"hello"}
-# Normal request 2
-{"err_code":0,"err_message":"success","msg":"goodbye"}
-# Bad request 1: request with INVALID json body
-{"err_code":10001,"err_message":"bad request"}
-# Bad request 2: request with EMPTY json body
-{"err_code":10001,"err_message":"bad request"}
-# Server not found. The server echoXXX does not exist.
-{"err_code":10002,"err_message":"server not found"}
-# Server method not found. The method EchoMethodXXX does not exist.
-{"err_code":10003,"err_message":"server method not found"}
-```
-
-Similarly, to send requests to the `sum` service, run
-```shell
-# run at project root directory
-sh script/sum_request.sh
-```
-
-The output is
-```shell
-# Normal request 1: both positive numbers
-{"err_code":0,"err_message":"success","sum":6}
-# Normal request 2: with a negative number
-{"err_code":0,"err_message":"success","sum":-6000}
-```
-
-Testing for business errors is omitted since it is similar to that of `echo` service.
-<br></br>
-
-## Integration test
 Navigate to the `/integration_test` directory, and run the go tests in verbose mode to see all our integration testcases:
 ```shell
 go test ./... -v
 ```
+
+You can also test using cURL to view the exact response the gateway sends back for each of the request, we have provided the commands to send various valid/invalid requests in `scripts/echo_request.sh` and `scripts/sum_request.sh`. You can find the expected response in the comments for each request.
 
 ## Unit Test
 Several chosen packages have unit tests done. Run the following commands to run all unit tests and check test coverage:
@@ -164,7 +127,7 @@ You  will notice that there is not a subdirectory called `handler`. Please creat
 For cleaner code structure, you can place all the above generated file into a new subdirectory `length` under `kitex_services/`. Note that you may have to rewrite the import path of package `length` in all generated files with this import package. Skipping this step will not affect the correctness of code. For ease of illustration, I will write this service in the root directory.
 
 All method process entry should be in `handler.go`. Below is an example implementation of the length service.
-```
+```go
 package handler
 
 import (
@@ -182,7 +145,7 @@ func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq)
 ```
 
 Next, modify the `main.go` file so that it registers the service with Nacos, has a service name called "length", and uses a customised port number 8893. You may change this port number but you should avoid ports already used by the gateway and other services, or any other programs currently running on your laptop. By default, the gateway runs on port 8080, the echo service runs on ports 8870, 8871, 8872, the sum service runs on ports 9870, 9871, 9872.
-```
+```go
 package main
 
 import (
@@ -218,7 +181,7 @@ func main() {
 }
 ```
 Next, run `main` to get the server running.
-```
+```shell
 go run main.go
 ```
 If you see something like this in your terminal:
@@ -241,7 +204,7 @@ curl -X POST http://localhost:8080/gateway/length/LengthMethod \
     -w '\n'
 ```
 You should see:
-```
+```shell
 {"err_code":0,"err_message":"success","msg":5}
 ```
 Congratulations again! You have just added a new Kitex service to our gateway while it is still running, leveraging our dynamic update feature.
