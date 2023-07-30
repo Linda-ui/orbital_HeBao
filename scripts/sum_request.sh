@@ -2,25 +2,26 @@
 # returns {"err_code":0,"err_message":"success","sum":6}
 curl -X POST http://localhost:8080/gateway/sum/SumMethod \
     -H "Content-Type: application/json" \
-    -d '{"biz_params":"{\"firstNum\":2,\"secondNum\":4}"}' \
+    -d '{"firstNum": 4, "secondNum": 2}' \
     -w '\n'
 
 # Normal request 2: with a negative number
 # returns {"err_code":0,"err_message":"success","sum":-6000}
 curl -X POST http://localhost:8080/gateway/sum/SumMethod \
     -H "Content-Type: application/json" \
-    -d '{"biz_params":"{\"firstNum\":-10000,\"secondNum\":4000}"}' \
+    -d '{"firstNum": -10000, "secondNum": 4000}' \
     -w '\n'
 
-# Problem to be solved:
-# the value and type of the fields in the request body is not validated due to the implementation
-# of Kitex's JSON mapping generic call feature. A mechanism needs to be incorporated in 
-# the gateway to validate the request body's field names.
+# Normal request 3: with a decimal number
+# returns {"err_code":0,"err_message":"success","sum":14}
+curl -X POST http://localhost:8080/gateway/sum/SumMethod \
+    -H "Content-Type: application/json" \
+    -d '{"firstNum": 5.4, "secondNum": 9}' \
+    -w '\n'
 
-# expected: {"err_code":10001,"err_message":"bad request"}
-# got: {"err_code":0,"err_message":"success","sum":4000} (0 is the default value for firstNum)
-
-# curl -X POST http://localhost:8080/gateway/sum/SumMethod \
-#     -H "Content-Type: application/json" \
-#     -d '{"biz_params":"{\"firstNum\":\"XXX\",\"secondNum\":4000}"}' \
-#     -w '\n'
+# Bad request: integer overflow
+# returns {"error_category":"remote or network error[remote]","error_details":"biz error: Overflow: sum is too large to be represented."}
+curl -X POST http://localhost:8080/gateway/sum/SumMethod \
+    -H "Content-Type: application/json" \
+    -d '{"firstNum": 1, "secondNum": 9223372036854775807}' \
+    -w '\n'
