@@ -28,16 +28,16 @@ func TestIntegrationGateway(t *testing.T) {
 
 		directory, filename := filepath.Split(path)
 
-		switch directory {
-		case "testdata/gateway/":
+		switch filepath.Base(directory) {
+		case "gateway":
 			url = "http://localhost:8080/"
-		case "testdata/echo/":
+		case "echo":
 			url = "http://localhost:8080/gateway/echo/EchoMethod"
 		case "sum":
 			url = "http://localhost:8080/gateway/sum/SumMethod"
-		case "testdata/noService/":
+		case "noService":
 			url = "http://localhost:8080/gateway/echoXXX/EchoMethod"
-		case "testdata/noServiceMethod/":
+		case "noServiceMethod":
 			url = "http://localhost:8080/gateway/echo/EchoMethodXXX"
 		default:
 			url = "http://localhost:8080/gateway"
@@ -53,7 +53,7 @@ func TestIntegrationGateway(t *testing.T) {
 			}
 
 			var resp *http.Response
-			if directory == "testdata/gateway/" {
+			if filepath.Base(directory) == "gateway" {
 				resp, err = http.Get(url)
 				if err != nil {
 					t.Fatalf("Failed to make request: %v", err)

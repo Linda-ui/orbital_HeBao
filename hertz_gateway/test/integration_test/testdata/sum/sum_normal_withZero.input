@@ -1,1 +1,4 @@
-{"biz_params":"{\"firstNum\":2,\"secondNum\":0}"}
+{
+  "firstNum": 2,
+  "secondNum": 0
+}
