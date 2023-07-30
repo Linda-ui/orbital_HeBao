@@ -79,8 +79,9 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond)
 
+	mockRepo.On("AddService", newFile1Path, mock.Anything).Return(nil).Once()
+	mockRepo.On("AddService", newFile2Path, mock.Anything).Return(nil)
 	for _, newFilePath := range newFilePaths {
-		mockRepo.On("AddService", newFilePath, mock.Anything).Return(nil).Once()
 		err = ioutil.WriteFile(newFilePath, []byte(newFileContent), os.FileMode(0644))
 		if err != nil {
 			t.Fatalf("Error creating the file: %v", err)
@@ -89,11 +90,34 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	// delete a test file
-	// assert deleteservice called once
-	mockRepo.On("DeleteService", "new_file_2").Once()
+	// update the content of new_file_2.thrift
+	// AddService for new_file_2.thrift called the second time
+	mockRepo.On("AddService", newFile2Path, mock.Anything).Return(nil)
+	err = ioutil.WriteFile(newFile2Path, []byte(`How are you Jenny? I'm fine, thank you. And you?`), os.FileMode(0644))
+	if err != nil {
+		t.Fatalf("Error writing the file: %v", err)
+		return
+	}
+	time.Sleep(10 * time.Millisecond)
 
-	err = os.Remove(newFile2Path)
+	// rename new_file_2.thrift to renamed_file_2.thrift
+	// DeleteService called for new_file_2.thrift
+	// AddService called for renamed_file_2.thrift
+	newPath := filepath.Join(newDirPath, "renamed_file_2.thrift")
+	mockRepo.On("DeleteService", "new_file_2").Once()
+	mockRepo.On("AddService", newPath, mock.Anything).Return(nil)
+
+	err = os.Rename(newFile2Path, newPath)
+	if err != nil {
+		t.Fatalf("Error renaming the file: %v", err)
+		return
+	}
+	time.Sleep(10 * time.Millisecond)
+
+	// delete renamed_file_2.thrift
+	// assert deleteservice called once
+	mockRepo.On("DeleteService", "renamed_file_2").Once()
+	err = os.Remove(newPath)
 	if err != nil {
 		t.Fatalf("Error deleting the file: %v", err)
 		return
