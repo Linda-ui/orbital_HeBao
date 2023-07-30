@@ -27,7 +27,7 @@ curl -X POST http://localhost:8080/gateway/echoXXX/EchoMethod \
     -w '\n' 
 
 # Server method not found. The method EchoMethodXXX does not exist.
-# returns {"err_code":10003,"err_message":"server method not found"}
+# returns {"error_category":"missing method","error_details":"EchoMethodXXX in service: EchoSvc"}
 curl -X POST http://localhost:8080/gateway/echo/EchoMethodXXX \
     -H "Content-Type: application/json" \
     -d '{"msg":"hello"}' \
