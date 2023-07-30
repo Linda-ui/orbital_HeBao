@@ -35,9 +35,9 @@ First [download the latest version of Nacos](https://github.com/alibaba/nacos/re
 Then, run the gateway startup script to start up the API gateway and the nacos server locally.
 ```shell
 # run at project root directory
-./script/gateway_startup_zsh.sh # for zshell
+./scripts/gateway_startup_zsh.sh # for zshell
 # OR
-./script/gateway_startup_bash.sh # for bash
+./scripts/gateway_startup_bash.sh # for bash
 ```
 
 If the gateway starts succesfully, you should see something like:
@@ -64,7 +64,7 @@ curl http://localhost:8080/
 Finally, run the backend server startup script to start all service instances.
 ```shell
 # run at project root directory
-./script/server_startup.sh
+./scripts/server_startup.sh
 ```
 
 You should be able to see echo and sum services in your Nacos console, under `ServiceManagement -> Service List`.
