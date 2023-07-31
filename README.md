@@ -135,7 +135,7 @@ This example adds an `length` Kitex service that returns the length of the strin
 
 Under the project root directory, create a new Thrift file that defines this `length` service. This is used for Kitex's code generation tool to generate skeleton code.
 
-You MUST name your IDL file the same as your service name. In this case, name the file `length.thrift`.
+**You MUST name your IDL file the same as your service name.** In this case, name the file `length.thrift`.
 ```thrift
 namespace go length
 
