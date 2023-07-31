@@ -196,7 +196,7 @@ type LengthSvcImpl struct{}
 // LengthMethod implements the LengthSvcImpl interface.
 func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
 	// add this line.
-	return &length.LengthResp{StrLen: int64(len(req.Msg))}, nil
+	return &length.LengthResp{Strlen: int64(len(req.Msg))}, nil
 }
 ```
 
@@ -264,6 +264,59 @@ You should see:
 {"err_code":0,"err_message":"success","strlen":5}
 ```
 Congratulations! You have just added a new Kitex service to the gateway while it is still running, leveraging the dynamic update feature. Note that if you want to change the server method logic, you have to shut down the running Kitex server first and restart it when you finish modifying.
+<br></br>
+
+### Change the IDL
+To change the structs and methods in the defined interface, you need to update the IDL file and regenerate the Kitex side code.
+We will change the `LengthResp` struct and add a method `LengthPlus100Method` in `length.thrift`.
+```thrift
+namespace go length
+
+struct LengthReq {
+  1: string msg
+}
+
+struct LengthResp {
+  1: string msg
+  2: i64 strlen
+}
+
+service LengthSvc {
+  LengthResp LengthMethod(1: LengthReq req)
+  LengthResp LengthPlus100Method(1: LengthReq req)
+}
+```
+Regenerate the Kitex client and server code:
+```shell
+kitex -module github.com/Linda-ui/orbital_HeBao -service length idl/length.thrift
+```
+The `kitex_gen` files and `handler.go` will be updated to the new IDL definitions.
+A new handler in the root directory will be created. Copy paste the new method signature in the new `handler.go` to our "real" handler in the `handler/` subdirectory and delete the new `handler.go` file. We will write the new logic in our original handler file.
+```go
+func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
+	// modify LengthResp to have a Msg field
+	return &length.LengthResp{Msg: req.Msg, Strlen: int64(len(req.Msg))}, nil
+}
+
+func (s *LengthSvcImpl) LengthPlus100Method(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
+	// modify LengthResp to have a Msg field, implement new method
+	return &length.LengthResp{Msg: req.Msg, Strlen: int64(len(req.Msg)) + 100}, nil
+}
+```
+We have completed updating the Kitex service. 
+Now stop the running `length` service with `ctrl+c` and run the new service with `go run main.go`.
+Test the new method:
+```shell
+curl -X POST http://localhost:8080/gateway/length/LengthPlus100Method
+     -H "Content-Type: application/json"
+     -d '{"msg":"hello"}'
+     -w '\n'
+```
+You should see the new method working and returns a response with both the string message and its length.
+```shell
+{"err_code":0,"err_message":"success","msg":"hello","strlen":105}
+```
+You have successfully updated the service without restarting the gateway.
 <br></br>
 
 ### Delete a service
