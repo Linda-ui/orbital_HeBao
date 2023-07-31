@@ -248,7 +248,7 @@ You should see something like below:
 2023/07/30 16:17:00.249035 logger.go:45: [Info] adding beat: <{"ip":"127.0.0.1","port":8893,"weight":10,"serviceName":"DEFAULT_GROUP@@length","cluster":"DEFAULT","metadata":{},"scheduled":false}> to beat map
 2023/07/30 16:17:00.249103 logger.go:45: [Info] namespaceId:<> sending beat to server:<{"ip":"127.0.0.1","port":8893,"weight":10,"serviceName":"DEFAULT_GROUP@@length","cluster":"DEFAULT","metadata":{},"scheduled":false}>
 ```
-This means you have successfully run the Kitex server for the `length`service. 
+This means you have successfully run the Kitex server for the `length` service. 
 
 In order for our gateway to recognise our newly added service, move `length.thrift` into the `/idl` directory. The addition of IDL file in the `/idl` directory tells our gateway that a new service named `length` is added.
 
