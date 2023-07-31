@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/utils"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/genericclient"
@@ -88,9 +88,10 @@ func (m *manager) DynamicUpdate(idlRootPath string, opts ...client.Option) {
 					if ok {
 						hlog.Infof("Directory " + event.String())
 						delete(dirPathSet, path)
+						watcher.Remove(path)
 					} else {
 						hlog.Infof("File " + event.String())
-						svcName := strings.ReplaceAll(filepath.Base(path), ".thrift", "")
+						svcName := utils.ExtractServiceName(path)
 						m.repo.DeleteService(svcName)
 					}
 				}

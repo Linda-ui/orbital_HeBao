@@ -33,6 +33,7 @@ func TestManager_AddAllServices(t *testing.T) {
 		}
 
 		if !info.Mode().IsDir() && info.Mode().IsRegular() {
+			// Assert that AddService is called once for each path.
 			mockRepo.On("AddService", path, mock.Anything).Return(nil).Once()
 		}
 
@@ -60,16 +61,16 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 		t.Fatalf("failed to get IDL directory: %v", err)
 	}
 
+	// running the function to be tested concurrently
 	go func() {
 		testManager.DynamicUpdate(root)
 	}()
 
 	// Add a new directory and add two new files in new directory
-	// assert AddService called once for each file
 	newDirPath := filepath.Join(root, "new_test_directory")
 	newFile1Path := filepath.Join(newDirPath, "new_file_1.thrift")
 	newFile2Path := filepath.Join(newDirPath, "new_file_2.thrift")
-	newFilePaths := []string{newFile1Path, newFile2Path, newFile2Path}
+	newFilePaths := []string{newFile1Path, newFile2Path}
 	newFileContent := ``
 
 	err = os.Mkdir(newDirPath, os.FileMode(0777))
@@ -79,6 +80,7 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond)
 
+	// Test Case 1: AddService called for each file created.
 	mockRepo.On("AddService", newFile1Path, mock.Anything).Return(nil).Once()
 	mockRepo.On("AddService", newFile2Path, mock.Anything).Return(nil)
 	for _, newFilePath := range newFilePaths {
@@ -90,9 +92,10 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
+	// Test Case 2: AddService called for each file written.
+	mockRepo.On("AddService", newFile2Path, mock.Anything).Return(nil)
 	// update the content of new_file_2.thrift
 	// AddService for new_file_2.thrift called the second time
-	mockRepo.On("AddService", newFile2Path, mock.Anything).Return(nil)
 	err = ioutil.WriteFile(newFile2Path, []byte(`How are you Jenny? I'm fine, thank you. And you?`), os.FileMode(0644))
 	if err != nil {
 		t.Fatalf("Error writing the file: %v", err)
@@ -100,13 +103,13 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond)
 
-	// rename new_file_2.thrift to renamed_file_2.thrift
-	// DeleteService called for new_file_2.thrift
-	// AddService called for renamed_file_2.thrift
+	// Test Case 3: DeleteService and AddService both called once for each file deleted.
 	newPath := filepath.Join(newDirPath, "renamed_file_2.thrift")
+	// DeleteService called for new_file_2.thrift
 	mockRepo.On("DeleteService", "new_file_2").Once()
-	mockRepo.On("AddService", newPath, mock.Anything).Return(nil)
-
+	// AddService called for renamed_file_2.thrift
+	mockRepo.On("AddService", newPath, mock.Anything).Return(nil).Once()
+	// rename new_file_2.thrift to renamed_file_2.thrift
 	err = os.Rename(newFile2Path, newPath)
 	if err != nil {
 		t.Fatalf("Error renaming the file: %v", err)
@@ -114,27 +117,20 @@ func Test_manager_DynamicUpdate(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond)
 
-	// delete renamed_file_2.thrift
-	// assert deleteservice called once
+	// Test Case 4: DeleteService called for each file deleted.
 	mockRepo.On("DeleteService", "renamed_file_2").Once()
-	err = os.Remove(newPath)
-	if err != nil {
-		t.Fatalf("Error deleting the file: %v", err)
-		return
-	}
-	time.Sleep(10 * time.Millisecond)
-
-	// delete a directory
-	// assert deleteservice called once
 	mockRepo.On("DeleteService", "new_file_1").Once()
-	mockRepo.On("DeleteService", "new_test_directory").Once()
-
-	err = os.RemoveAll(newDirPath)
-	if err != nil {
-		t.Fatalf("Error deleting the file: %v", err)
-		return
+	for _, newFilePath := range []string{newFile1Path, newPath} {
+		err = os.Remove(newFilePath)
+		if err != nil {
+			t.Fatalf("Error deleting the file: %v", err)
+			return
+		}
 	}
 	time.Sleep(10 * time.Millisecond)
+
+	// Clean up
+	err = os.RemoveAll(newDirPath)
 
 	// assert
 	mockRepo.AssertExpectations(t)
