@@ -26,12 +26,12 @@ var (
 )
 
 func initFlags() {
-	flag.StringVar(&idlPath, "idlpath", "./idl/echo.thrift", "the path to the service IDL file")
+	flag.StringVar(&idlPath, "idlpath", utils.GetProjectIDLRoot()+"/echo.thrift", "the path to the service IDL file")
 	flag.StringVar(&svcMethodName, "method", "EchoMethod", "the name of the service method to be called")
-	flag.StringVar(&payload, "d", "{\"msg\":\"hello\"}", "the data to be sent to the server")
+	flag.StringVar(&payload, "d", "{\"msg\":\"goodbye\"}", "the data to be sent to the server")
 	flag.StringVar(&port, "p", "8870", "the ports to be used for the benchmarking")
 	flag.IntVar(&concurrent, "c", 100, "the number of concurrent requests")
-	flag.Int64Var(&total, "n", 100000, "the total number of requests")
+	flag.Int64Var(&total, "n", 200000, "the total number of requests")
 	flag.IntVar(&bufsize, "b", 1024, "the size of the buffer for each request")
 	flag.IntVar(&sleepTime, "s", 0, "the time to sleep between each request")
 	flag.Parse()

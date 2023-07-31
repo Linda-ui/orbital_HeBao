@@ -6,12 +6,11 @@ import (
 	"github.com/Linda-ui/orbital_HeBao/hertz_gateway/config"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/hertz-contrib/pprof"
-	"github.com/spf13/viper"
 )
 
 func main() {
 	h := server.Default(server.WithHostPorts(config.ServiceAddr))
-	h.Name = viper.GetString(config.ServiceName)
+	h.Name = config.ServiceName
 
 	pprof.Register(h)
 	register(h)
