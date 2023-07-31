@@ -1,8 +1,7 @@
 #!/bin/bash
 
-
+# DO NOT EDIT.
 # This script starts all the backend kitex servers.
-# It should be executed after the gateway startup script.
 
 # function to recursively find .go files recursively and execute them
 function backend_server_startup() {

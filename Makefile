@@ -14,7 +14,9 @@ services:
 
 .PHONY: stop
 stop:
-	-pkill -f INT hertz_gateway
+	-pkill -INT -f hertz_gateway
 	-pkill -f kitex_services
+	-lsof -t -i :8870 | xargs kill
+	-lsof -t -i :9870 | xargs kill
 	-~/nacos/bin/shutdown.sh
 
