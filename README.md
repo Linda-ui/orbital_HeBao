@@ -118,6 +118,11 @@ go test ./... -v
 You can also test using cURL to view the exact response the gateway sends back for each of the request, we have provided the commands to send various valid/invalid requests in `scripts/echo_request.sh` and `scripts/sum_request.sh`. You can find the expected response in the comments above each request.
 <br></br>
 
+## Benchmark Test
+
+The gateway's performance is benchmarked with JMeter and Apache Bench. More details are found at `/hertz_gateway/test/benchmark_test`. Direct RPCs to Kitex servers are also benchmarked for comparison with the gateway's performance. More details can be found at `/kitex_services/benchmark_test`.
+The evaluation of test results is documented on the notion page.
+<br></br>
 
 ## Testing the Dynamic Update Feature
 
@@ -130,7 +135,7 @@ This example adds an `length` Kitex service that returns the length of the strin
 
 Under the project root directory, create a new Thrift file that defines this `length` service. This is used for Kitex's code generation tool to generate skeleton code.
 
-You MUST name your IDL file the same as your service name. In this case, name the file `length.thrift`.
+**You MUST name your IDL file the same as your service name.** In this case, name the file `length.thrift`.
 ```thrift
 namespace go length
 
@@ -196,7 +201,7 @@ type LengthSvcImpl struct{}
 // LengthMethod implements the LengthSvcImpl interface.
 func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
 	// add this line.
-	return &length.LengthResp{StrLen: int64(len(req.Msg))}, nil
+	return &length.LengthResp{Strlen: int64(len(req.Msg))}, nil
 }
 ```
 
@@ -248,7 +253,7 @@ You should see something like below:
 2023/07/30 16:17:00.249035 logger.go:45: [Info] adding beat: <{"ip":"127.0.0.1","port":8893,"weight":10,"serviceName":"DEFAULT_GROUP@@length","cluster":"DEFAULT","metadata":{},"scheduled":false}> to beat map
 2023/07/30 16:17:00.249103 logger.go:45: [Info] namespaceId:<> sending beat to server:<{"ip":"127.0.0.1","port":8893,"weight":10,"serviceName":"DEFAULT_GROUP@@length","cluster":"DEFAULT","metadata":{},"scheduled":false}>
 ```
-This means you have successfully run the Kitex server for the `length`service. 
+This means you have successfully run the Kitex server for the `length` service. 
 
 In order for our gateway to recognise our newly added service, move `length.thrift` into the `/idl` directory. The addition of IDL file in the `/idl` directory tells our gateway that a new service named `length` is added.
 
@@ -266,8 +271,62 @@ You should see:
 Congratulations! You have just added a new Kitex service to the gateway while it is still running, leveraging the dynamic update feature. Note that if you want to change the server method logic, you have to shut down the running Kitex server first and restart it when you finish modifying.
 <br></br>
 
-### Delete a service
-Simply remove the `length.thrift` from the `/idl` subdirectory, and clean up the rest of the generated server code by deleting all the files.
+### Modify the Service IDL File
+To change the structs and methods in the defined interface, you need to update the IDL file and regenerate the Kitex side code.
+We will change the `LengthResp` struct and add a method `LengthPlus100Method` in `length.thrift`.
+```thrift
+namespace go length
+
+struct LengthReq {
+  1: string msg
+}
+
+struct LengthResp {
+  1: string msg
+  2: i64 strlen
+}
+
+service LengthSvc {
+  LengthResp LengthMethod(1: LengthReq req)
+  LengthResp LengthPlus100Method(1: LengthReq req)
+}
+```
+Regenerate the Kitex client and server code:
+```shell
+kitex -module github.com/Linda-ui/orbital_HeBao -service length idl/length.thrift
+```
+The `kitex_gen` files and `handler.go` will be updated to the new IDL definitions.
+A new handler in the root directory will be created. Copy paste the new method signature in the new `handler.go` to our "real" handler in the `handler/` subdirectory and delete the new `handler.go` file. We will write the new logic in our original handler file.
+```go
+func (s *LengthSvcImpl) LengthMethod(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
+	// modify LengthResp to have a Msg field
+	return &length.LengthResp{Msg: req.Msg, Strlen: int64(len(req.Msg))}, nil
+}
+
+func (s *LengthSvcImpl) LengthPlus100Method(ctx context.Context, req *length.LengthReq) (resp *length.LengthResp, err error) {
+	// modify LengthResp to have a Msg field, implement new method
+	return &length.LengthResp{Msg: req.Msg, Strlen: int64(len(req.Msg)) + 100}, nil
+}
+```
+We have completed updating the Kitex service. 
+
+Now, terminating the `length` service and restart the updated service with `go run main.go`.
+Test the new method:
+```shell
+curl -X POST http://localhost:8080/gateway/length/LengthPlus100Method
+     -H "Content-Type: application/json"
+     -d '{"msg":"hello"}'
+     -w '\n'
+```
+You should see the new method working and returning a response with the string message and length plus 100.
+```shell
+{"err_code":0,"err_message":"success","msg":"hello","strlen":105}
+```
+You have successfully updated the service without restarting the gateway.
+<br></br>
+
+### Delete the Service
+Remove the `length.thrift` from the `/idl` subdirectory, and clean up the rest of the generated server code by deleting all the files.
 Perform a test to the deleted `length` service:
 ```shell
 curl -X POST http://localhost:8080/gateway/length/LengthMethod \
